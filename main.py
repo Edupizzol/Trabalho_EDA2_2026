@@ -1,4 +1,3 @@
-# main.py
 from src.extraction.downloader import KaggleDatasetDownloader
 from src.extraction.extractor import ReviewExtractor
 from src.preprocessing.processor_manager import ProcessManager  # <- Novo Import
