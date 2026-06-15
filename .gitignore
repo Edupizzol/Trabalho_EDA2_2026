@@ -1,18 +1,18 @@
+# Ignorar dados brutos e processados para não explodir o GitHub
+data/raw/*.csv
+data/raw/*.zip
+data/cleaned/*.json
+data/processed/*.json
+data/graphs/*.graphml
+
+# Mas NÃO ignorar os arquivos fantasmas (isso garante que as pastas subam)
+!data/raw/.gitkeep
+!data/cleaned/.gitkeep
+!data/processed/.gitkeep
+!data/graphs/.gitkeep
+
+# Arquivos do Python
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
-
 .venv/
 venv/
-env/
-
-.ipynb_checkpoints/
-
-.DS_Store
-
-data/raw/*
-!data/raw/.gitkeep
-
-outputs/*
-!outputs/.gitkeep
