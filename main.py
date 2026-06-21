@@ -1,6 +1,7 @@
 from src.extraction.downloader import KaggleDatasetDownloader
 from src.extraction.extractor import ReviewExtractor
 from src.preprocessing.processor_manager import ProcessManager
+from src.graph_construction.graph_builder import build_graphs_from_categories
 
 def main():
     KAGGLE_DATASET = "fredericods/ptbr-sentiment-analysis-datasets"
@@ -24,6 +25,9 @@ def main():
     processor = ProcessManager(input_dir=CLEANED_DIR, output_dir=PROCESSED_DIR)
     processor.process_all_tiers()
 
+    print("\n--- FASE 4: CONSTRUÇÃO DOS GRAFOS ---")
+    categorias = ["bad_reviews", "mid_reviews", "good_reviews"]
+    build_graphs_from_categories(PROCESSED_DIR, categorias)
 
 if __name__ == "__main__":
     main()
