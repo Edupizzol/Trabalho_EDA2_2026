@@ -10,10 +10,27 @@ class ReviewExtractor:
     def run(self):
         print("Iniciando segregação dos dados do B2W...")
 
-        df = pd.read_csv(self.raw_data_path, sep=';', usecols=['rating', 'review_text'])
+        # Usamos engine='python' e sep=None para o Pandas adivinhar se é vírgula ou ponto e vírgula
+        # Usamos on_bad_lines='skip' para pular qualquer linha corrompida que quebraria o parser
+        df = pd.read_csv(
+            self.raw_data_path,
+            sep=None,
+            engine='python',
+            on_bad_lines='skip'
+        )
+
+        # Forçamos todas as colunas a ficarem em letras minúsculas para evitar dores de cabeça
+        df.columns = df.columns.str.lower()
+
+        # Verificação rápida para debugar caso os nomes das colunas tenham mudado drasticamente
+        print(f"Colunas detectadas no CSV: {list(df.columns)}")
+
+        # Garante que estamos pegando as colunas de texto e nota
+        # (Ajuste os nomes dentro da lista abaixo se o print de cima mostrar nomes diferentes)
+        df = df[['rating', 'review_text']]
         df = df.dropna(subset=['rating', 'review_text'])
 
-        # AJUSTE 3: Atualizar referências para bater com as colunas minúsculas do DataFrame
+        # Divide as categorias por estrelas
         bad_reviews = df[df['rating'].isin([1, 2])]['review_text'].tolist()
         mid_reviews = df[df['rating'] == 3]['review_text'].tolist()
         good_reviews = df[df['rating'].isin([4, 5])]['review_text'].tolist()

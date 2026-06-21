@@ -3,14 +3,14 @@ from src.extraction.extractor import ReviewExtractor
 from src.preprocessing.processor_manager import ProcessManager
 
 def main():
-    KAGGLE_DATASET = "luisfredgs/b2w-reviews01"
+    KAGGLE_DATASET = "fredericods/ptbr-sentiment-analysis-datasets"
 
     RAW_DIR = "data/raw"
     CLEANED_DIR = "data/cleaned"
     PROCESSED_DIR = "data/processed"
 
     # AJUSTE 2: Nome real do arquivo CSV extraído do dataset B2W
-    RAW_CSV_PATH = f"{RAW_DIR}/B2W-Reviews01.csv"
+    RAW_CSV_PATH = f"{RAW_DIR}/b2w.csv"
 
     print("--- FASE 1: INGESTÃO DE DADOS (API) ---")
     downloader = KaggleDatasetDownloader(dataset_slug=KAGGLE_DATASET, output_dir=RAW_DIR)
