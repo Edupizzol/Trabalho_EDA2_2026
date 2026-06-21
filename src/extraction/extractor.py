@@ -1,4 +1,3 @@
-# src/extraction/extractor.py
 import os
 import json
 import pandas as pd
@@ -9,19 +8,18 @@ class ReviewExtractor:
         self.output_dir = output_dir
 
     def run(self):
-        print("Iniciando segregação dos dados...")
-        
-        # Ajustado para as colunas do novo dataset público
-        df = pd.read_csv(self.raw_data_path, usecols=['Rating', 'ReviewText'])
-        df = df.dropna(subset=['Rating', 'ReviewText'])
+        print("Iniciando segregação dos dados do B2W...")
 
-        # Divide as categorias por estrelas
-        bad_reviews = df[df['Rating'].isin([1, 2])]['ReviewText'].tolist()
-        mid_reviews = df[df['Rating'] == 3]['ReviewText'].tolist()
-        good_reviews = df[df['Rating'].isin([4, 5])]['ReviewText'].tolist()
+        df = pd.read_csv(self.raw_data_path, sep=';', usecols=['rating', 'review_text'])
+        df = df.dropna(subset=['rating', 'review_text'])
+
+        # AJUSTE 3: Atualizar referências para bater com as colunas minúsculas do DataFrame
+        bad_reviews = df[df['rating'].isin([1, 2])]['review_text'].tolist()
+        mid_reviews = df[df['rating'] == 3]['review_text'].tolist()
+        good_reviews = df[df['rating'].isin([4, 5])]['review_text'].tolist()
 
         os.makedirs(self.output_dir, exist_ok=True)
-        
+
         datasets = {
             "bad_reviews.json": bad_reviews,
             "mid_reviews.json": mid_reviews,
