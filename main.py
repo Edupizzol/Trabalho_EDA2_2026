@@ -27,5 +27,9 @@ def main():
     categorias = ["bad_reviews", "mid_reviews", "good_reviews"]
     builders = build_graphs_from_categories(PROCESSED_DIR, categorias)
 
+    print("\n--- FASE 5: CÁLCULO DE PAGERANK (ANÁLISE DE REDES) ---")
+    from src.analysis.pagerank_runner import run_pagerank_analysis
+    run_pagerank_analysis()
+
 if __name__ == "__main__":
     main()
