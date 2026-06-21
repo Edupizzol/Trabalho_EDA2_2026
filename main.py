@@ -1,6 +1,8 @@
 from src.extraction.downloader import KaggleDatasetDownloader
 from src.extraction.extractor import ReviewExtractor
 from src.preprocessing.processor_manager import ProcessManager  # <- Novo Import
+from src.graph_construction.graph_builder import build_graphs_from_categories
+
 
 def main():
     KAGGLE_DATASET = "muhammadzamin1/product-reviews-dataset-for-sentiment-analysis"
@@ -20,6 +22,10 @@ def main():
     print("\n--- FASE 3: PRÉ-PROCESSAMENTO DE TEXTO ---")
     processor = ProcessManager(input_dir=CLEANED_DIR, output_dir=PROCESSED_DIR)
     processor.process_all_tiers()
+
+    print("\n--- FASE 4: CONSTRUÇÃO DOS GRAFOS ---")
+    categorias = ["bad_reviews", "mid_reviews", "good_reviews"]
+    builders = build_graphs_from_categories(PROCESSED_DIR, categorias)
 
 if __name__ == "__main__":
     main()
