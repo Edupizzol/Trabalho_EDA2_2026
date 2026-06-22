@@ -24,9 +24,11 @@ outputs/menu/
 outputs/metrics/
 outputs/reports/
 
-# Ignorar explicitamente todos os PNG e Markdown gerados nos outputs
+# Ignorar explicitamente todos os PNG, Markdown e HTML gerados nos outputs
 outputs/**/*.png
 outputs/**/*.md
+outputs/**/*.html
+outputs/*.html
 
 # Mas NÃO ignorar os arquivos fantasmas das pastas de output (garante que subam)
 !outputs/metrics/.gitkeep

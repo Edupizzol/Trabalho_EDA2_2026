@@ -11,6 +11,7 @@ from menu.opcao2.executor import executar_opcao_2
 from menu.opcao3.executor import executar_opcao_3
 from src.analysis.pagerank_runner import run_pagerank_analysis
 from src.analysis.bfs import run_bfs_analysis
+from src.reporting.html_consolidator import gerar_relatorio_html, limpar_artefatos_de_analise
 
 
 # Estilo visual compartilhado pelos prompts do Questionary.
@@ -46,7 +47,9 @@ _TEXTO_ETAPA2 = (
     "[bold]BFS Contextual[/]\n"
     "  Explora a vizinhança de palavras-chave, mostrando com quais\n"
     "  termos elas mais coocorrem em cada faixa.\n"
-    "  [dim]\"Em que contexto uma palavra aparece em cada nível?\"[/]"
+    "  [dim]\"Em que contexto uma palavra aparece em cada nível?\"[/]\n\n"
+    "[dim]O relatório HTML consolidado é atualizado automaticamente\n"
+    "após cada análise -> outputs/relatorio_consolidado.html[/]"
 )
 
 
@@ -72,18 +75,24 @@ def _menu_escopo(cleaned_dir, processed_dir, carregar_func, salvar_func):
         style=ESTILO,
     ).ask()
 
-    if escolha == "1":
-        executar_opcao_1(cleaned_dir, processed_dir, carregar_func, salvar_func)
+    if escolha in ("1", "2", "3"):
+        # Cada nova Etapa 1 começa um ciclo limpo: remove artefatos de execuções
+        # anteriores para que o relatório contenha SOMENTE o conteúdo deste ciclo.
+        limpar_artefatos_de_analise()
+
+        if escolha == "1":
+            executar_opcao_1(cleaned_dir, processed_dir, carregar_func, salvar_func)
+        elif escolha == "2":
+            executar_opcao_2(cleaned_dir, processed_dir, carregar_func, salvar_func)
+        else:
+            executar_opcao_3(cleaned_dir, processed_dir)
+
+        # Gera o relatório apenas com o conteúdo da Etapa 1.
+        gerar_relatorio_html()
         return True
-    elif escolha == "2":
-        executar_opcao_2(cleaned_dir, processed_dir, carregar_func, salvar_func)
-        return True
-    elif escolha == "3":
-        executar_opcao_3(cleaned_dir, processed_dir)
-        return True
-    else:
-        # "0" ou None (Ctrl+C) → encerrar
-        return False
+
+    # "0" ou None (Ctrl+C) → encerrar
+    return False
 
 
 def _menu_analises_adicionais():
@@ -114,11 +123,14 @@ def _menu_analises_adicionais():
 
         if escolha == "4":
             run_pagerank_analysis()
+            gerar_relatorio_html()
         elif escolha == "5":
             run_bfs_analysis()
+            gerar_relatorio_html()
         elif escolha == "6":
             run_pagerank_analysis()
             run_bfs_analysis()
+            gerar_relatorio_html()
         elif escolha == "9":
             console.print()
             exibir_painel(
