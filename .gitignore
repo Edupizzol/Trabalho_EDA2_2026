@@ -23,6 +23,7 @@ venv/
 outputs/menu/
 outputs/metrics/
 outputs/reports/
+outputs/visualizacoes/
 
 # Ignorar explicitamente todos os PNG, Markdown e HTML gerados nos outputs
 outputs/**/*.png

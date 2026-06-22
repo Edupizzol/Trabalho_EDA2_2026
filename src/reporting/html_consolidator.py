@@ -125,6 +125,26 @@ def _coletar_secoes():
         secoes.append(("bfs", "Vizinhança Semântica (BFS)", _md_arquivo_para_html(md_bfs)))
         log_info("Relatório de BFS incluído.")
 
+    # 4. Visualizações Avançadas (Etapa 3) — um MD por gráfico, em ordem fixa.
+    vis_dir = os.path.join("outputs", "visualizacoes")
+    _ORDEM_VIS = [
+        ("distribuicao_grau",    "Distribuição de Grau"),
+        ("comparativo_top10",    "Comparativo Top 10 (PageRank)"),
+        ("heatmap_coocorrencia", "Heatmap de Coocorrência"),
+        ("scatter_deslocamento", "Scatter de Deslocamento"),
+        ("wordcloud_pagerank",   "Word Cloud (PageRank)"),
+    ]
+    partes_vis = []
+    for slug, titulo_vis in _ORDEM_VIS:
+        md_path = os.path.join(vis_dir, f"{slug}.md")
+        if os.path.exists(md_path):
+            partes_vis.append(_md_arquivo_para_html(md_path))
+            log_info(f"Visualização incluída: {titulo_vis}")
+
+    if partes_vis:
+        secoes.append(("visualizacoes", "Visualizações Avançadas (Etapa 3)",
+                        "\n<hr/>\n".join(partes_vis)))
+
     return secoes
 
 
@@ -291,8 +311,12 @@ def limpar_artefatos_de_analise():
     da Etapa 1 e, em seguida, acrescentando o que a Etapa 2 produzir.
     Os arquivos `.gitkeep` das pastas são preservados.
     """
-    if os.path.isdir(os.path.join("outputs", "menu")):
-        shutil.rmtree(os.path.join("outputs", "menu"))
+    for pasta in (
+        os.path.join("outputs", "menu"),
+        os.path.join("outputs", "visualizacoes"),
+    ):
+        if os.path.isdir(pasta):
+            shutil.rmtree(pasta)
 
     for padrao in (
         os.path.join("outputs", "reports", "*.md"),
