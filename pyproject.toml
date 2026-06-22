@@ -14,9 +14,26 @@ dependencies = [
     "click (>=8.4.1,<9.0.0)",
     "networkx (>=3.6.1,<4.0.0)",
     "matplotlib (>=3.11.0,<4.0.0)",
-    "scipy (>=1.18.0,<2.0.0)"
+    "scipy (>=1.18.0,<2.0.0)",
+    "tqdm (>=4.67.0,<5.0.0)",
+    "pt-core-news-sm @ https://github.com/explosion/spacy-models/releases/download/pt_core_news_sm-3.8.0/pt_core_news_sm-3.8.0-py3-none-any.whl",
+    "rich (>=15.0.0,<16.0.0)",
+    "questionary (>=2.1.1,<3.0.0)",
+    "markdown (>=3.10.2,<4.0.0)"
 ]
 
+
+[tool.poetry]
+packages = [
+    {include = "analysis", from = "src"},
+    {include = "extraction", from = "src"},
+    {include = "graph_construction", from = "src"},
+    {include = "graph_definition", from = "src"},
+    {include = "interface", from = "src"},
+    {include = "preprocessing", from = "src"},
+    {include = "reporting", from = "src"},
+    {include = "utils", from = "src"}
+]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

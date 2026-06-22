@@ -1,17 +1,10 @@
 import os
 import json
-import random
+
 from src.extraction.downloader import KaggleDatasetDownloader
 from src.extraction.extractor import ReviewExtractor
-from src.preprocessing.processor_manager import ProcessManager
-from src.graph_construction.graph_builder import build_graphs_from_categories
-from src.analysis.bfs import run_bfs_analysis
-from menu.opcao1.executor import executar_opcao_1
-from menu.opcao2.executor import executar_opcao_2
-from menu.opcao3.executor import executar_opcao_3
-
-# Importa a execução do PageRank diretamente da estrutura de pastas do seu src
-from src.analysis.pagerank_runner import run_pagerank_analysis
+from src.interface.console import exibir_banner, exibir_fase
+from src.interface.menus import run_menu_principal
 
 
 def carregar_reviews_limpas(cleaned_dir):
@@ -37,44 +30,6 @@ def salvar_reviews_amostradas(processed_dir, dados_amostrados):
             json.dump(reviews, f, ensure_ascii=False, indent=4)
 
 
-def menu_interativo(cleaned_dir, processed_dir):
-    print("\n==================================================")
-    print("         MENU DE CONFIGURAÇÃO DO ESCOPO           ")
-    print("==================================================")
-    print("1 - Amostragem Rápida: Pegar 100 reviews de cada e montar grafo")
-    print("2 - Seleção Manual: Escolher quais reviews entram no grafo")
-    print("3 - Escopo Total: Processar TODAS as reviews (Demorado)")
-    print("4 - Executar Análise de PageRank nos grafos construídos")
-    print("5 - Executar Análise de Vizinhança Semântica via BFS")
-    print("0 - Sair")
-    opcao = input("\nEscolha uma opção: ")
-
-    if opcao == "1":
-        executar_opcao_1(cleaned_dir, processed_dir, carregar_reviews_limpas, salvar_reviews_amostradas)
-        return True
-
-    elif opcao == "2":
-        executar_opcao_2(cleaned_dir, processed_dir, carregar_reviews_limpas, salvar_reviews_amostradas)
-        return True
-
-
-    elif opcao == "3":
-        executar_opcao_3(cleaned_dir, processed_dir)
-        return True
-
-    elif opcao == "4":
-        run_pagerank_analysis()
-        return False
-
-    elif opcao == "5":
-        run_bfs_analysis()
-        return False
-
-    else:
-        print("\n[-] Saindo...")
-        return False
-
-
 def main():
     KAGGLE_DATASET = "fredericods/ptbr-sentiment-analysis-datasets"
     RAW_DIR = "data/raw"
@@ -82,17 +37,26 @@ def main():
     PROCESSED_DIR = "data/processed"
     RAW_CSV_PATH = f"{RAW_DIR}/b2w.csv"
 
+    exibir_banner()
+
     # Ingestão e Segregação rápidas
-    print("--- FASE 1: INGESTÃO DE DADOS (API) ---")
+    exibir_fase(1, "INGESTÃO DE DADOS (API)")
     downloader = KaggleDatasetDownloader(dataset_slug=KAGGLE_DATASET, output_dir=RAW_DIR)
     downloader.fetch_data()
 
-    print("\n--- FASE 2: SEGREGAÇÃO DE TEXTO ---")
+    exibir_fase(2, "SEGREGAÇÃO DE TEXTO")
     extractor = ReviewExtractor(raw_data_path=RAW_CSV_PATH, output_dir=CLEANED_DIR)
     extractor.run()
 
-    # Menu controla as fases pesadas e analíticas
-    menu_interativo(CLEANED_DIR, PROCESSED_DIR)
+    # Toda a interação com o usuário (menus, escolhas, navegação) vive na
+    # camada `interface/`. O main apenas injeta os callbacks de dados.
+    run_menu_principal(
+        cleaned_dir=CLEANED_DIR,
+        processed_dir=PROCESSED_DIR,
+        carregar_func=carregar_reviews_limpas,
+        salvar_func=salvar_reviews_amostradas,
+    )
+
 
 if __name__ == "__main__":
     main()

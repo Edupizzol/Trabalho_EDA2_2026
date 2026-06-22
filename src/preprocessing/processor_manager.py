@@ -2,7 +2,9 @@ import os
 import json
 import itertools
 from collections import Counter
+from tqdm import tqdm
 from src.preprocessing.text_cleaner import ReviewPreprocessor
+from src.interface.console import log_info, log_ok, log_aviso, log_dados
 
 
 class ProcessManager:
@@ -13,7 +15,7 @@ class ProcessManager:
         self.window_size = window_size
 
     def process_all_tiers(self):
-        print(f"Iniciando pré-processamento e extração de arestas (Sliding Window size={self.window_size})...")
+        log_info(f"Iniciando pré-processamento — Sliding Window size={self.window_size}...")
         os.makedirs(self.output_dir, exist_ok=True)
 
         target_files = ["bad_reviews.json", "mid_reviews.json", "good_reviews.json"]
@@ -23,16 +25,15 @@ class ProcessManager:
             output_path = os.path.join(self.output_dir, filename)
 
             if not os.path.exists(input_path):
-                print(f"Arquivo {filename} não encontrado. Pulando...")
+                log_aviso(f"Arquivo {filename} não encontrado. Pulando...")
                 continue
 
-            print(f"Processando e gerando coocorrências para {filename}...")
             with open(input_path, 'r', encoding='utf-8') as f:
                 reviews = json.load(f)
 
             edge_counter = Counter()
 
-            for review in reviews:
+            for review in tqdm(reviews, desc=f"Coocorrências {filename}", unit="review"):
                 tokens = self.cleaner.clean_text(review)
 
                 if len(tokens) < 2:
@@ -69,4 +70,4 @@ class ProcessManager:
             with open(output_path, 'w', encoding='utf-8') as f:
                 json.dump(edges_list, f, ensure_ascii=False, indent=4)
 
-            print(f"Salvo: {len(edges_list)} arestas únicas calculadas em {output_path}")
+            log_ok(f"Salvo: {len(edges_list)} arestas únicas em {output_path}")

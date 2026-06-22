@@ -3,6 +3,7 @@ import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 from src.graph_construction.graph_builder import GraphBuilder
+from src.interface.console import exibir_secao, log_info, log_ok, log_aviso, log_dados
 
 
 def executar_bfs_contextual(builder, palavra_raiz, max_camadas=2):
@@ -67,12 +68,12 @@ def run_bfs_analysis():
         ""
     ]
 
-    print("\n--- INICIANDO ANÁLISE DE VIZINHANÇA (BFS) ---")
+    exibir_secao("ANÁLISE DE VIZINHANÇA SEMÂNTICA (BFS)")
 
     for cat in categories:
         graph_path = os.path.join(graphs_dir, f"{cat}_graph.json")
         if not os.path.exists(graph_path):
-            print(f"[!] Grafo de {cat} não encontrado. Pulei.")
+            log_aviso(f"Grafo de {cat} não encontrado. Pulando...")
             continue
 
         with open(graph_path, "r", encoding="utf-8") as f:
@@ -87,7 +88,7 @@ def run_bfs_analysis():
         markdown_lines.append(f"## 📊 Categoria: {cat.upper()}")
         markdown_lines.append("")
 
-        print(f"Analisando adjacências para a categoria: {cat}...")
+        log_info(f"Analisando adjacências para a categoria: {cat}...")
 
         for raiz in palavras_chave[cat]:
             res_camadas = executar_bfs_contextual(builder, raiz, max_camadas=2)
@@ -110,8 +111,7 @@ def run_bfs_analysis():
     with open(report_path, "w", encoding="utf-8") as f:
         f.write("\n".join(markdown_lines))
 
-    print(f"\n[SUCESSO] Relatório semântico da BFS salvo em: '{report_path}'")
-    print("--------------------------------------------")
+    log_ok(f"Relatório semântico da BFS salvo em: '{report_path}'")
 
 
 if __name__ == "__main__":

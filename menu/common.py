@@ -4,10 +4,12 @@ import random
 import shutil
 import matplotlib.pyplot as plt
 import networkx as nx
+from tqdm import tqdm
 
 from src.preprocessing.processor_manager import ProcessManager
 from src.graph_construction.graph_builder import build_graphs_from_categories
 from src.analysis.pagerank import PageRankCalculator
+from src.interface.console import exibir_secao, log_info, log_ok, log_aviso, log_dados
 
 
 def pipeline_grafos_e_visualizacao(input_amostra_dir, processed_dir, output_opcao_dir, titulo_md, subtitulo_md):
@@ -18,20 +20,20 @@ def pipeline_grafos_e_visualizacao(input_amostra_dir, processed_dir, output_opca
     """
     # --- RESET DO DIRETÓRIO DE OUTPUT ---
     if os.path.exists(output_opcao_dir):
-        print(f"[*] Limpando artefatos antigos em '{output_opcao_dir}'...")
+        log_aviso(f"Limpando artefatos antigos em '{output_opcao_dir}'...")
         shutil.rmtree(output_opcao_dir)
 
     os.makedirs(output_opcao_dir, exist_ok=True)
 
-    print("[+] Rodando pré-processamento (Sliding Window)...")
+    log_info("Rodando pré-processamento (Sliding Window)...")
     processor = ProcessManager(input_dir=input_amostra_dir, output_dir=processed_dir)
     processor.process_all_tiers()
 
-    print("\n--- FASE 4: CONSTRUÇÃO DOS GRAFOS ---")
+    exibir_secao("CONSTRUÇÃO DOS GRAFOS")
     categorias = ["bad_reviews", "mid_reviews", "good_reviews"]
     build_graphs_from_categories(processed_dir, categorias)
 
-    print("\n[+] Gerando visualizações geométricas e estatísticas dos grafos...")
+    exibir_secao("GERANDO VISUALIZAÇÕES")
     calc_pr = PageRankCalculator()
 
     # Inicializa o relatório Markdown
@@ -43,7 +45,7 @@ def pipeline_grafos_e_visualizacao(input_amostra_dir, processed_dir, output_opca
         ""
     ]
 
-    for cat in categorias:
+    for cat in tqdm(categorias, desc="Gerando visualizações", unit="categoria"):
         graph_path = f"data/graphs/{cat}_graph.json"
         if not os.path.exists(graph_path):
             continue
@@ -167,7 +169,7 @@ def pipeline_grafos_e_visualizacao(input_amostra_dir, processed_dir, output_opca
 
     gerar_analise_diferencial(processed_dir, output_opcao_dir)
 
-    print(f"\n[SUCESSO] Pipeline concluída! Relatório Markdown e gráficos gerados em '{output_opcao_dir}/'!")
+    log_ok(f"Pipeline concluída! Relatórios e gráficos gerados em '{output_opcao_dir}/'")
 
 
 def gerar_analise_diferencial(processed_dir, output_opcao_dir):
@@ -177,7 +179,7 @@ def gerar_analise_diferencial(processed_dir, output_opcao_dir):
     globais de macroanálise e os acoplamentos fortes (maiores pesos de aresta).
     Gera um relatório comparativo completo e robusto em Markdown.
     """
-    print("[+] Computando macroanálise e acoplamento forte entre as categorias...")
+    log_info("Computando macroanálise e acoplamento forte entre as categorias...")
 
     categorias = ["bad_reviews", "mid_reviews", "good_reviews"]
     dados_cats = {}
@@ -361,4 +363,4 @@ def gerar_analise_diferencial(processed_dir, output_opcao_dir):
     with open(output_path, "w", encoding="utf-8") as f:
         f.write("\n".join(md_lines))
 
-    print(f"[SUCESSO] Relatório diferencial e topologia avançada exportados em '{output_path}'!")
+    log_ok(f"Relatório diferencial exportado em '{output_path}'")

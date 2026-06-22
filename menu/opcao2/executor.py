@@ -1,12 +1,13 @@
 import os
 import random
 from menu.common import pipeline_grafos_e_visualizacao
+from src.interface.console import log_info, log_ok, log_erro, log_aviso
 
 
 def executar_opcao_2(cleaned_dir, processed_dir, carregar_func, salvar_func):
     dados = carregar_func(cleaned_dir)
     if not any(dados.values()):
-        print("[!] Erro: Dados base não encontrados.")
+        log_erro("Dados base não encontrados. Execute a fase de segregação primeiro.")
         return False
 
     output_opcao_dir = "outputs/menu/opcao2"
@@ -15,9 +16,7 @@ def executar_opcao_2(cleaned_dir, processed_dir, carregar_func, salvar_func):
     dados_selecionados = {"bad_reviews": [], "mid_reviews": [], "good_reviews": []}
 
     for cat, lista in dados.items():
-        print(f"\n==============================================")
-        print(f"       CURADORIA MANUAL: {cat.upper()}        ")
-        print(f"==============================================")
+        log_info(f"Curadoria manual: {cat.upper()}")
 
         # Seleciona uma amostra de 5 para o usuário ler no terminal
         amostra_visualizacao = random.sample(lista, min(len(lista), 5))
@@ -30,7 +29,7 @@ def executar_opcao_2(cleaned_dir, processed_dir, carregar_func, salvar_func):
 
         # Fallback de segurança: caso rejeite todas, escolhe uma aleatória
         if not dados_selecionados[cat] and lista:
-            print("[*] Nenhuma review selecionada manualmente. Adicionando uma por amostragem.")
+            log_aviso("Nenhuma review selecionada. Adicionando uma por amostragem automática.")
             dados_selecionados[cat].append(random.choice(lista))
 
     input_amostra_dir = cleaned_dir + "_amostra"

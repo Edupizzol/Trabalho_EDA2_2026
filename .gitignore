@@ -1,9 +1,10 @@
-# Ignorar dados brutos e processados para não explodir o GitHub
+# Ignorar dados brutos, processados e artefatos gerados para não explodir o GitHub
 data/raw/*.csv
 data/raw/*.zip
 data/cleaned/*.json
 data/processed/*.json
-data/graphs/*.graphml
+data/graphs/*.json
+data/cleaned_amostra/
 
 # Mas NÃO ignorar os arquivos fantasmas (isso garante que as pastas subam)
 !data/raw/.gitkeep
@@ -17,3 +18,19 @@ __pycache__/
 .venv/
 venv/
 .idea
+
+# Resultados e métricas gerados pela execução do pipeline (não versionar)
+outputs/menu/
+outputs/metrics/
+outputs/reports/
+outputs/visualizacoes/
+
+# Ignorar explicitamente todos os PNG, Markdown e HTML gerados nos outputs
+outputs/**/*.png
+outputs/**/*.md
+outputs/**/*.html
+outputs/*.html
+
+# Mas NÃO ignorar os arquivos fantasmas das pastas de output (garante que subam)
+!outputs/metrics/.gitkeep
+!outputs/reports/.gitkeep

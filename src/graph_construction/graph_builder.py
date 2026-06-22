@@ -1,6 +1,7 @@
 import json
 import sys
 sys.setrecursionlimit(50000)
+from src.interface.console import log_dados
 
 class GraphBuilder:
     def __init__(self):
@@ -152,7 +153,7 @@ def build_graphs_from_categories(processed_dir, categorias):
 
         total_vertices = len(builder.get_id_to_word())
         total_arestas = sum(len(v) for v in builder.get_graph().values()) // 2
-        print(f"{categoria}: {total_vertices} vértices, {total_arestas} arestas")
+        log_dados(f"{categoria}: {total_vertices} vértices, {total_arestas} arestas")
 
         builder.save_graph(f"data/graphs/{categoria}_graph.json")
 
