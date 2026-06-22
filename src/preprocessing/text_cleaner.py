@@ -1,23 +1,23 @@
 import spacy
 
+
 class ReviewPreprocessor:
     def __init__(self):
-        self.nlp = spacy.load("en_core_web_sm")
-        
+        self.nlp = spacy.load("pt_core_news_sm")
+
     def clean_text(self, text: str) -> list:
-        
         if not isinstance(text, str) or not text.strip():
             return []
-            
-        #passa o texto pra minusculo
+
         doc = self.nlp(text.lower())
-        
+
         clean_tokens = []
         for token in doc:
-            #filtra as stopwords preposicoes, pontuações, espaços e números
+            #Filtra stopwords, preposições, pontuações, espaços e números
             if not token.is_stop and not token.is_punct and not token.is_space and not token.like_num:
-                #mantém apenas substantivos(NOUN) e adjetivos(ADJ)
+                #Mantém apenas substantivos e adjetivos
                 if token.pos_ in ['NOUN', 'ADJ'] and token.is_alpha:
-                    #adiciona a raiz da palavra(lemma)
+                    #Adiciona o lema da palavra em português (ex: compro -> comprar)
                     clean_tokens.append(token.lemma_)
+
         return clean_tokens
