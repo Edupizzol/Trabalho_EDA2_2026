@@ -14,21 +14,21 @@ Para encontrar os top termos mais influentes de forma eficiente, foi utilizada u
 
 | Rank | Bad Reviews (Ruins) | PageRank | Mid Reviews (Médios) | PageRank | Good Reviews (Bons) | PageRank |
 |---|---|---|---|---|---|---|
-| 1 | bad | 0.145943 | bad | 0.101123 | good | 0.063642 |
-| 2 | customer | 0.058247 | product | 0.057458 | wonderful | 0.058908 |
-| 3 | service | 0.058247 | good | 0.055470 | experience | 0.058908 |
-| 4 | product | 0.055341 | price | 0.049176 | product | 0.056115 |
-| 5 | purchase | 0.054161 | decent | 0.049176 | quality | 0.054435 |
-| 6 | money | 0.049145 | pro | 0.045163 | excellent | 0.054435 |
-| 7 | waste | 0.047500 | con | 0.045163 | purchase | 0.054049 |
-| 8 | experience | 0.046708 | experience | 0.038069 | great | 0.050049 |
-| 9 | poor | 0.045533 | expectation | 0.038065 | value | 0.050049 |
-| 10 | quality | 0.045533 | average | 0.035814 | amazing | 0.046321 |
-| 11 | terrible | 0.042020 | okay | 0.034633 | feature | 0.046321 |
-| 12 | star | 0.037698 | quality | 0.028066 | recommend | 0.041967 |
-| 13 | feature | 0.033987 | wonderful | 0.026703 | star | 0.041161 |
-| 14 | difficult | 0.033305 | service | 0.026675 | expectation | 0.038936 |
-| 15 | disappointed | 0.032436 | customer | 0.026675 | easy | 0.038515 |
+| 1 | produto | 0.044339 | produto | 0.037001 | produto | 0.039943 |
+| 2 | dia | 0.020150 | entrega | 0.009803 | qualidade | 0.026945 |
+| 3 | americana | 0.015631 | prazo | 0.009619 | excelente | 0.025206 |
+| 4 | compra | 0.012466 | preço | 0.008674 | prazo | 0.020825 |
+| 5 | uso | 0.012017 | aparelho | 0.008218 | entrega | 0.018386 |
+| 6 | problema | 0.010967 | compra | 0.008049 | rápido | 0.016785 |
+| 7 | entrega | 0.009836 | tv | 0.007724 | ótimo | 0.015156 |
+| 8 | site | 0.009230 | chip | 0.007300 | bom | 0.009795 |
+| 9 | qualidade | 0.008456 | água | 0.007291 | dia | 0.009192 |
+| 10 | dinheiro | 0.007961 | dia | 0.006990 | pequeno | 0.008895 |
+| 11 | assistência | 0.007700 | qualidade | 0.006969 | super | 0.008824 |
+| 12 | defeito | 0.007408 | bom | 0.006758 | custo | 0.007819 |
+| 13 | técnico | 0.007140 | acabamento | 0.006485 | recomendo | 0.007747 |
+| 14 | péssimo | 0.006879 | rápido | 0.006430 | bonito | 0.007352 |
+| 15 | empresa | 0.006842 | custo | 0.006172 | perfeito | 0.006987 |
 
 ## Análise e Discussão dos Resultados
 
