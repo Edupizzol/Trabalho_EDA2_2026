@@ -6,6 +6,9 @@ from src.extraction.extractor import ReviewExtractor
 from src.preprocessing.processor_manager import ProcessManager
 from src.graph_construction.graph_builder import build_graphs_from_categories
 from src.analysis.bfs import run_bfs_analysis
+from menu.opcao1.executor import executar_opcao_1
+from menu.opcao2.executor import executar_opcao_2
+from menu.opcao3.executor import executar_opcao_3
 
 # Importa a execução do PageRank diretamente da estrutura de pastas do seu src
 from src.analysis.pagerank_runner import run_pagerank_analysis
@@ -47,64 +50,19 @@ def menu_interativo(cleaned_dir, processed_dir):
     opcao = input("\nEscolha uma opção: ")
 
     if opcao == "1":
-        dados = carregar_reviews_limpas(cleaned_dir)
-        if not any(dados.values()):
-            print("[!] Erro: Rode a pipeline completa primeiro.")
-            return False
-
-        print("\n[+] Gerando amostra aleatória de 100 reviews por categoria...")
-        dados_amostrados = {}
-        for cat, lista in dados.items():
-            dados_amostrados[cat] = random.sample(lista, min(len(lista), 100))
-            print(f" -> {cat}: 100 reviews selecionadas.")
-
-        salvar_reviews_amostradas(cleaned_dir + "_amostra", dados_amostrados)
-        print("[+] Rodando pré-processamento rápido (Sliding Window)...")
-        processor = ProcessManager(input_dir=cleaned_dir + "_amostra", output_dir=processed_dir)
-        processor.process_all_tiers()
-
-        print("\n--- FASE 4: CONSTRUÇÃO DOS GRAFOS ---")
-        categorias = ["bad_reviews", "mid_reviews", "good_reviews"]
-        build_graphs_from_categories(processed_dir, categorias)
+        executar_opcao_1(cleaned_dir, processed_dir, carregar_reviews_limpas, salvar_reviews_amostradas)
         return True
 
     elif opcao == "2":
-        dados = carregar_reviews_limpas(cleaned_dir)
-        dados_selecionados = {"bad_reviews": [], "mid_reviews": [], "good_reviews": []}
-        for cat, lista in dados.items():
-            print(f"\n--- Seleção para a categoria: {cat} ---")
-            amostra_visualizacao = random.sample(lista, min(len(lista), 5))
-
-            for idx, review in enumerate(amostra_visualizacao, 1):
-                print(f"\n[{idx}] {review[:200]}...")
-                escolha = input(f"Deseja incluir essa review? (s/n): ").lower()
-                if escolha == 's':
-                    dados_selecionados[cat].append(review)
-
-            if not dados_selecionados[cat]:
-                dados_selecionados[cat].append(random.choice(lista))
-
-        salvar_reviews_amostradas(cleaned_dir + "_amostra", dados_selecionados)
-        processor = ProcessManager(input_dir=cleaned_dir + "_amostra", output_dir=processed_dir)
-        processor.process_all_tiers()
-
-        print("\n--- FASE 4: CONSTRUÇÃO DOS GRAFOS ---")
-        categorias = ["bad_reviews", "mid_reviews", "good_reviews"]
-        build_graphs_from_categories(processed_dir, categorias)
+        executar_opcao_2(cleaned_dir, processed_dir, carregar_reviews_limpas, salvar_reviews_amostradas)
         return True
 
-    elif opcao == "3":
-        print("\n[+] Processando o escopo total de dados...")
-        processor = ProcessManager(input_dir=cleaned_dir, output_dir=processed_dir)
-        processor.process_all_tiers()
 
-        print("\n--- FASE 4: CONSTRUÇÃO DOS GRAFOS ---")
-        categorias = ["bad_reviews", "mid_reviews", "good_reviews"]
-        build_graphs_from_categories(processed_dir, categorias)
+    elif opcao == "3":
+        executar_opcao_3(cleaned_dir, processed_dir)
         return True
 
     elif opcao == "4":
-        # Dispara diretamente o script analítico da outra dupla
         run_pagerank_analysis()
         return False
 
@@ -135,7 +93,6 @@ def main():
 
     # Menu controla as fases pesadas e analíticas
     menu_interativo(CLEANED_DIR, PROCESSED_DIR)
-
 
 if __name__ == "__main__":
     main()
