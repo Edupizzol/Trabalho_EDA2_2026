@@ -173,16 +173,17 @@ def pipeline_grafos_e_visualizacao(input_amostra_dir, processed_dir, output_opca
 def gerar_analise_diferencial(processed_dir, output_opcao_dir):
     """
     Analisa os grafos das três categorias para identificar interseções,
-    palavras exclusivas e o deslocamento de importância (PageRank) de termos comuns.
-    Gera um relatório comparativo em Markdown.
+    palavras exclusivas, o deslocamento de importância (PageRank), as métricas
+    globais de macroanálise e os acoplamentos fortes (maiores pesos de aresta).
+    Gera um relatório comparativo completo e robusto em Markdown.
     """
-    print("[+] Computando análise diferencial entre as categorias...")
+    print("[+] Computando macroanálise e acoplamento forte entre as categorias...")
 
     categorias = ["bad_reviews", "mid_reviews", "good_reviews"]
     dados_cats = {}
     calc_pr = PageRankCalculator()
 
-    # Carrega os dados e calcula o PageRank completo de cada uma
+    # Carrega os dados e extrai todas as propriedades topológicas
     for cat in categorias:
         graph_path = f"data/graphs/{cat}_graph.json"
         if not os.path.exists(graph_path):
@@ -194,59 +195,97 @@ def gerar_analise_diferencial(processed_dir, output_opcao_dir):
         graph_dict = graph_data["grafo"]["graph"]
         id_to_word = graph_data["grafo"]["id_to_word"]
 
-        # Obter dicionário de scores: { "palavra": score }
-        scores_pr = calc_pr.calculate(graph_dict, id_to_word)
+        # --- CONSTRUÇÃO DO GRAFO COMPLETO VIA NETWORKX ---
+        G_completo = nx.Graph()
+        for u, neighbors in graph_dict.items():
+            u_word = id_to_word[int(u)]
+            for v, w in neighbors.items():
+                v_word = id_to_word[int(v)]
+                G_completo.add_edge(u_word, v_word, weight=int(w))
 
-        # Guardamos o top 30 para fazer cruzamentos relevantes
+        # 1. Métricas de MacroAnálise
+        num_nos = G_completo.number_of_nodes()
+        num_arestas = G_completo.number_of_edges()
+        densidade = nx.density(G_completo)
+        clustering_medio = nx.average_clustering(G_completo)
+
+        # 2. Acoplamento Forte (As 3 arestas com maior peso de coocorrência)
+        # O NetworkX lida nativamente com o grafo não-direcionado eliminando duplicatas espelhadas
+        arestas_ponderadas = [(u, v, d['weight']) for u, v, d in G_completo.edges(data=True)]
+        top_3_arestas = sorted(arestas_ponderadas, key=lambda x: x[2], reverse=True)[:3]
+
+        # 3. Métricas Locais (PageRank)
+        scores_pr = calc_pr.calculate(graph_dict, id_to_word)
         top_30_lista = calc_pr.get_top_k(scores_pr, k=30)
         top_30_words = [word for word, _ in top_30_lista]
-
-        # Mapeamento de rank (posição) para identificar deslocamentos
         word_to_rank = {word: idx + 1 for idx, (word, _) in enumerate(top_30_lista)}
 
-        # --- AQUI ESTAVA O BUG: Removido o .values() ---
         dados_cats[cat] = {
-            "todas": set(id_to_word),  # <--- Mudado de set(id_to_word.values()) para set(id_to_word)
+            "todas": set(id_to_word),
             "top_30": set(top_30_words),
             "ranks": word_to_rank,
-            "scores": scores_pr
+            "scores": scores_pr,
+            "num_nos": num_nos,
+            "num_arestas": num_arestas,
+            "densidade": densidade,
+            "clustering": clustering_medio,
+            "top_3_arestas": top_3_arestas
         }
 
-    # --- PROCESSAMENTO DOS INSIGHTS ---
+    # --- PROCESSAMENTO DOS INSIGHTS DE CONJUNTOS ---
     good_top = dados_cats["good_reviews"]["top_30"]
     mid_top = dados_cats["mid_reviews"]["top_30"]
     bad_top = dados_cats["bad_reviews"]["top_30"]
 
-    # 1. Palavras que são Hubs Globais (estão no Top 30 de TODAS)
     hubs_globais = good_top.intersection(mid_top).intersection(bad_top)
-
-    # 2. Palavras exclusivas do Top de cada extremo (Good vs Bad)
     exclusivas_good = good_top - bad_top - mid_top
     exclusivas_bad = bad_top - good_top - mid_top
 
-    # 3. Deslocamento de Rank (Palavras que flutuam de importância)
-    # Procuramos palavras que estão no topo de Good e Bad, mas em posições muito diferentes
+    # Deslocamento de Rank
     deslocamentos = []
     palavras_comuns_extremos = good_top.intersection(bad_top)
-
     for word in palavras_comuns_extremos:
         rank_good = dados_cats["good_reviews"]["ranks"].get(word, 99)
         rank_bad = dados_cats["bad_reviews"]["ranks"].get(word, 99)
         diff = abs(rank_good - rank_bad)
-        if diff >= 3:  # Relevante se mudou pelo menos 3 posições de importância
+        if diff >= 3:
             deslocamentos.append((word, rank_good, rank_bad, diff))
 
-    # Ordena pelo tamanho do deslocamento
     deslocamentos.sort(key=lambda x: x[3], reverse=True)
+
+    # Helper interno para formatar a lista de acoplamentos no Markdown
+    def formatar_linhas_arestas(lista_arestas):
+        if not lista_arestas:
+            return "* Nenhuma associação forte detectada."
+        linhas = []
+        for idx, (u, v, w) in enumerate(lista_arestas):
+            linhas.append(f"{idx + 1}. `{u}` ↔ `{v}` (Frequência de Coocorrência: **{w}**)")
+        return "\n".join(linhas)
 
     # --- MONTAGEM DO MARKDOWN COMPARATIVO ---
     md_lines = [
-        "# 📑 Relatório de Análise Diferencial e Contraste Semântico",
+        "# Relatório de Análise Diferencial e Contraste Semântico",
         "Este relatório apresenta uma análise comparativa profunda sobre a topologia e a semântica dos grafos de coocorrência das categorias **GOOD**, **MID** e **BAD** reviews. O objetivo é mapear cientificamente como a estrutura do discurso e a importância de determinados conceitos mudam conforme o nível de satisfação do usuário.",
         "",
         "---",
         "",
-        "## 1. Hubs Vocabulares Globais (Interseção Semântica)",
+        "## 1. Visão Geral das Redes (MacroAnálise)",
+        "Esta seção traz uma análise comparativa da estrutura global das redes. Essas métricas revelam a complexidade, a conectividade e a coesão do ecossistema de palavras de cada faixa de satisfação.",
+        "",
+        "| Métrica Global | GOOD REVIEWS | MID REVIEWS | BAD REVIEWS |",
+        "| :--- | :---: | :---: | :---: |",
+        f"| **Vocabulário Ativo (Nós)** | {dados_cats['good_reviews']['num_nos']} | {dados_cats['mid_reviews']['num_nos']} | {dados_cats['bad_reviews']['num_nos']} |",
+        f"| **Associações Distintas (Arestas)** | {dados_cats['good_reviews']['num_arestas']} | {dados_cats['mid_reviews']['num_arestas']} | {dados_cats['bad_reviews']['num_arestas']} |",
+        f"| **Densidade do Grafo** | {dados_cats['good_reviews']['densidade']:.5f} | {dados_cats['mid_reviews']['densidade']:.5f} | {dados_cats['bad_reviews']['densidade']:.5f} |",
+        f"| **Coeficiente de Agrupamento Médio** | {dados_cats['good_reviews']['clustering']:.5f} | {dados_cats['mid_reviews']['clustering']:.5f} | {dados_cats['bad_reviews']['clustering']:.5f} |",
+        "",
+        "### O que esses números significam na prática?",
+        "* **Densidade:** Indica a proporção de conexões reais frente às conexões possíveis. Uma densidade maior nas críticas de uma categoria sinaliza um discurso altamente focado e repetitivo (combinações de palavras padronizadas). Uma densidade menor indica que as avaliações são pulverizadas e tocam em assuntos muito variados.",
+        "* **Coeficiente de Agrupamento (Clustering Coefficient):** Mede a tendência dos nós de formarem aglomerados fechados ('panelinhas' semânticas). Valores elevados revelam que, quando certas palavras aparecem, elas trazem consigo um bloco previsível e rígido de outros termos associados, indicando contextos textuais muito bem definidos.",
+        "",
+        "---",
+        "",
+        "## 2. Hubs Vocabulares Globais (Interseção Semântica)",
         "### O que significa?",
         "Estes termos pertencem à interseção estrita do **Top 30 de PageRank** de todas as três categorias simultaneamente. Significa que, independentemente da nota da review, a centralidade estrutural dessas palavras na rede de coocorrência permanece massiva.",
         "",
@@ -257,7 +296,7 @@ def gerar_analise_diferencial(processed_dir, output_opcao_dir):
         "",
         "---",
         "",
-        "## 2. Assinaturas Exclusivas de Sentimento (Diferenças Topológicas)",
+        "## 3. Assinaturas Exclusivas de Sentimento (Diferenças Topológicas)",
         "### O que significa?",
         "São palavras que alcançaram relevância crítica (Top 30) **exclusivamente** em uma determinada categoria de review, desaparecendo do topo ou sequer existindo nas vertentes opostas.",
         "",
@@ -267,8 +306,6 @@ def gerar_analise_diferencial(processed_dir, output_opcao_dir):
         "* As exclusivas em **GOOD** mapeiam os diferenciais competitivos e os maiores acertos da experiência (recursos que encantam e fidelizam o usuário).",
         "* As exclusivas em **BAD** funcionam como um diagnóstico imediato de falhas críticas, bugs de performance, quebras de expectativa ou pontos de fricção severos na jornada.",
         "",
-        "Isolar esses termos permite à engenharia entender exatamente o que é o 'fator de valor' e o que é o 'fator de rejeição' sem a interferência de ruídos ou termos neutros.",
-        "",
         "### Exclusivas de Críticas Positivas (`GOOD`):",
         f"* {', '.join(exclusivas_good) if exclusivas_good else 'Nenhuma'}",
         "",
@@ -277,12 +314,12 @@ def gerar_analise_diferencial(processed_dir, output_opcao_dir):
         "",
         "---",
         "",
-        "## 3. Deslocamento de Centralidade (Flutuação de Importância via PageRank)",
+        "## 4. Deslocamento de Centralidade (Flutuação de Importância via PageRank)",
         "### O que significa?",
         "Esta métrica monitora termos voláteis: palavras que conseguiram entrar no Top 30 tanto de críticas positivas quanto negativas, mas sofreram uma variação drástica em suas posições de ranking (força de centralidade) com uma variação absoluta (|Δ|) de pelo menos 3 posições.",
         "",
         "### Impacto e Interpretação nas Reviews:",
-        "Este fenômeno revela o **deslocamento de foco de atenção** guiado pela emoção. Quando um termo apresenta um PageRank muito mais alto nas críticas negativas do que nas positivas, isso indica que, quando o recurso associado àquela palavra falha, ele monopoliza o discurso do usuário e se torna o principal assunto gerador de insatisfação (ex: um sistema que passa despercebido quando funciona perfeitamente, mas vira o centro das atenções se quebrar). ",
+        "Este fenômeno revela o **deslocamento de foco de atenção** guiado pela emoção. Quando um termo apresenta um PageRank muito mais alto nas críticas negativas do que nas positivas, isso indica que, quando o recurso associado àquela palavra falha, ele monopoliza o discurso do usuário e se torna o principal assunto gerador de insatisfação.",
         "",
         "A tabela abaixo ordena as palavras pela maior força de deslocamento, evidenciando quais conceitos sofrem a maior metamorfose de relevância dentro do ecossistema estudado:",
         ""
@@ -291,14 +328,37 @@ def gerar_analise_diferencial(processed_dir, output_opcao_dir):
     if deslocamentos:
         md_lines.append("| Palavra | Posição em GOOD | Posição em BAD | Força do Deslocamento |")
         md_lines.append("| :--- | :---: | :---: | :---: |")
-        for word, r_good, r_bad, diff in deslocamentos[:8]:  # Pega as 8 variações mais brutas
+        for word, r_good, r_bad, diff in deslocamentos[:8]:
             md_lines.append(f"| **{word}** | #{r_good} | #{r_bad} | Δ {diff} posições |")
     else:
         md_lines.append("*Nenhuma palavra apresentou variação drástica de posição entre os extremos.*")
 
-    # Escrita do arquivo
+    # Adicionando a nova seção de Acoplamento Forte ao final do Markdown
+    md_lines.extend([
+        "",
+        "---",
+        "",
+        "## 5. Acoplamento Forte (Vínculos Semânticos Rígidos)",
+        "### O que significa?",
+        "Esta análise extrai os pares de nós que possuem o maior peso de aresta absoluto na rede. Enquanto o PageRank mede a importância individual e distribuída de um termo, o acoplamento forte nos dá os **nódulos inquebráveis do discurso** — palavras que praticamente exigem a presença uma da outra quando o usuário expressa sua experiência.",
+        "",
+        "### Impacto e Interpretação nas Reviews:",
+        "Isso nos revela os 'combos' contextuais exatos. Em redes de texto, o peso da aresta é a frequência de coocorrência em janelas móveis. Identificar os top 3 pares de cada categoria nos permite ver o núcleo das maiores associações mentais做 pelo usuário:",
+        "",
+        "#### Associações Mais Fortes em GOOD REVIEWS:",
+        f"{formatar_linhas_arestas(dados_cats['good_reviews']['top_3_arestas'])}",
+        "",
+        "#### Associações Mais Fortes em MID REVIEWS:",
+        f"{formatar_linhas_arestas(dados_cats['mid_reviews']['top_3_arestas'])}",
+        "",
+        "#### Associações Mais Fortes em BAD REVIEWS:",
+        f"{formatar_linhas_arestas(dados_cats['bad_reviews']['top_3_arestas'])}",
+        ""
+    ])
+
+    # Escrita final do arquivo unificado
     output_path = os.path.join(output_opcao_dir, "analise_diferencial.md")
     with open(output_path, "w", encoding="utf-8") as f:
         f.write("\n".join(md_lines))
 
-    print(f"[SUCESSO] Relatório diferencial exportado em '{output_path}'!")
+    print(f"[SUCESSO] Relatório diferencial e topologia avançada exportados em '{output_path}'!")
