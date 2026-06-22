@@ -48,6 +48,73 @@ data/raw/B2W-Reviews01.csv
 
 ---
 
+## Instalação e Execução
+
+### Pré-requisitos
+
+- Python 3.13 ou superior
+- Poetry (gerenciador de dependências)
+
+### Instalando Poetry
+
+Se você ainda não tem o Poetry instalado, siga as instruções em: https://python-poetry.org/docs/#installation
+
+No Windows, você pode instalar com:
+```bash
+pipx install poetry
+```
+
+Ou usando pip:
+```bash
+pip install poetry
+```
+
+### Instalando as Dependências
+
+Clone o repositório e navegue até o diretório do projeto:
+
+```bash
+cd Trabalho_EDA2_2026
+```
+
+Instale as dependências usando Poetry:
+
+```bash
+poetry install
+```
+
+Isso criará um ambiente virtual e instalará todos os pacotes listados em `pyproject.toml`.
+
+### Ativando o Ambiente Virtual
+
+Para ativar o ambiente virtual criado pelo Poetry:
+
+```bash
+poetry shell
+```
+
+Ou você pode executar comandos diretamente sem ativar com:
+
+```bash
+poetry run python main.py
+```
+
+### Executando o Projeto
+
+Após instalar as dependências e ativar o ambiente virtual, você pode executar o projeto:
+
+```bash
+python main.py
+```
+
+Ou sem ativar o ambiente:
+
+```bash
+poetry run python main.py
+```
+
+---
+
 ## Estrutura do Projeto
 
 ```text
