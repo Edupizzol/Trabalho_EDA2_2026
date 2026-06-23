@@ -11,6 +11,7 @@ from menu.opcao2.executor import executar_opcao_2
 from menu.opcao3.executor import executar_opcao_3
 from src.analysis.pagerank_runner import run_pagerank_analysis
 from src.analysis.bfs import run_bfs_analysis
+from src.analysis.dfs import run_dfs_analysis
 from src.analysis.visualizacoes import (
     gerar_distribuicao_grau,
     gerar_comparativo_top10,
@@ -56,6 +57,9 @@ _TEXTO_ETAPA2 = (
     "  Explora a vizinhança de palavras-chave, mostrando com quais\n"
     "  termos elas mais coocorrem em cada faixa.\n"
     "  [dim]\"Em que contexto uma palavra aparece em cada nível?\"[/]\n\n"
+    "[bold]DFS — Componentes Conexos[/]\n"
+    "  Identifica blocos de palavras isolados do restante do vocabulário.\n"
+    "  [dim]\"O discurso é unificado ou fragmentado em subtemas?\"[/]\n\n"
     "[dim]O relatório HTML consolidado é atualizado automaticamente\n"
     "após cada análise -> outputs/relatorio_consolidado.html[/]"
 )
@@ -133,7 +137,8 @@ def _menu_analises_adicionais():
             choices=[
                 Choice("PageRank — palavras mais centrais (tabela comparativa Top 15)", value="4"),
                 Choice("BFS Contextual — vizinhança semântica de palavras-chave", value="5"),
-                Choice("Execute Todas As Análises Adicionais (PageRank e BFS Contextual)", value="6"),
+                Choice("DFS — componentes conexos (fragmentação do discurso)", value="8"),
+                Choice("Execute Todas As Análises Adicionais (PageRank, BFS e DFS)", value="6"),
                 Choice("Visualizações Avançadas — avançar para a Etapa 3", value="7"),
                 Choice("Voltar — reconstruir o grafo com outro escopo", value="9"),
                 Choice("Sair", value="0"),
@@ -150,6 +155,10 @@ def _menu_analises_adicionais():
     elif escolha == "6":
             run_pagerank_analysis()
             run_bfs_analysis()
+            run_dfs_analysis()
+            gerar_relatorio_html()
+    elif escolha == "8":  
+            run_dfs_analysis()
             gerar_relatorio_html()
     elif escolha == "7":
             console.print()

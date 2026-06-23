@@ -125,7 +125,13 @@ def _coletar_secoes():
         secoes.append(("bfs", "Vizinhança Semântica (BFS)", _md_arquivo_para_html(md_bfs)))
         log_info("Relatório de BFS incluído.")
 
-    # 4. Visualizações Avançadas (Etapa 3) — um MD por gráfico, em ordem fixa.
+    # 4. Relatório de DFS (componentes conexos) 
+    md_dfs = os.path.join("outputs", "reports", "dfs_components.md")
+    if os.path.exists(md_dfs):
+        secoes.append(("dfs", "Fragmentação Semântica (DFS)", _md_arquivo_para_html(md_dfs)))
+        log_info("Relatório de DFS incluído.")
+
+    # 5. Visualizações Avançadas (Etapa 3) — um MD por gráfico, em ordem fixa.
     vis_dir = os.path.join("outputs", "visualizacoes")
     _ORDEM_VIS = [
         ("distribuicao_grau",    "Distribuição de Grau"),
