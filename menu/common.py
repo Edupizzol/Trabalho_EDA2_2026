@@ -179,7 +179,7 @@ def pipeline_grafos_e_visualizacao(input_amostra_dir, processed_dir, output_opca
         plt.close()
 
         # 4. ALIMENTAÇÃO DINÂMICA DO MARKDOWN (EMBUTINDO AS IMAGENS COM SINTAXE MD)
-        markdown_lines.append(f"## 📈 Categoria Estrutural: `{cat.upper()}`")
+        markdown_lines.append(f"## Categoria Estrutural: `{cat.upper()}`")
         markdown_lines.append(f"* **Principais Hubs (Top PageRank):** {', '.join(top_5_words)}")
         markdown_lines.append("")
         markdown_lines.append("#### Análise Estatística e Topologia da Rede:")

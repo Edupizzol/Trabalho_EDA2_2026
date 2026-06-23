@@ -71,7 +71,7 @@ def generate_markdown_report(filepath, top_results):
     lines.append("2. **Mid Reviews** (Reviews com utilidade intermediária)")
     lines.append("3. **Good Reviews** (Reviews úteis/detalhados)")
     lines.append("")
-    lines.append("Para encontrar os top termos mais influentes de forma eficiente, foi utilizada uma estrutura de dados de **Min-Heap** personalizada com tamanho fixo $K=15$, otimizando o processo de seleção de $O(N \\log N)$ para $O(N \\log K)$ de complexidade de tempo.")
+    lines.append("Para encontrar os top termos mais influentes de forma eficiente, foi utilizada uma estrutura de dados de **Min-Heap** personalizada com tamanho fixo K=15, otimizando o processo de seleção de O(N log N) para O(N log K) de complexidade de tempo.")
     lines.append("")
     lines.append("## Top 15 Termos com Maior PageRank")
     lines.append("")
