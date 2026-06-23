@@ -13,6 +13,7 @@ from src.analysis.pagerank_runner import run_pagerank_analysis
 from src.analysis.bfs import run_bfs_analysis
 from src.analysis.dfs import run_dfs_analysis
 from src.analysis.review_quality import run_review_quality_ranking
+from src.analysis.kcore import run_kcore_analysis
 from src.analysis.visualizacoes import (
     gerar_distribuicao_grau,
     gerar_comparativo_top10,
@@ -147,58 +148,52 @@ def _menu_analises_adicionais():
                 Choice("PageRank — palavras mais centrais (tabela comparativa Top 15)", value="4"),
                 Choice("BFS Contextual — vizinhança semântica de palavras-chave", value="5"),
                 Choice("DFS — componentes conexos (fragmentação do discurso)", value="8"),
+                Choice("Guia de Boa Review — ranking de palavras (deslocamento PageRank)", value="9"),
                 Choice("Execute Todas As Análises Adicionais (PageRank, BFS e DFS)", value="6"),
                 Choice("Visualizações Avançadas — avançar para a Etapa 3", value="7"),
                 Choice("Voltar — reconstruir o grafo com outro escopo", value="10"),
-                Choice("Guia de Boa Review — ranking de palavras (deslocamento PageRank)", value="9"),
                 Choice("Sair", value="0"),
             ],
             style=ESTILO,
         ).ask()
 
     if escolha == "4":
-            run_pagerank_analysis()
-            gerar_relatorio_html()
+        run_pagerank_analysis()
+        gerar_relatorio_html()
     elif escolha == "5":
-            run_bfs_analysis()
-            gerar_relatorio_html()
+        run_bfs_analysis()
+        gerar_relatorio_html()
     elif escolha == "8":
-            run_kcore_analysis()
-            gerar_relatorio_html()
-    elif escolha == "10":
-            run_sankey_analysis()
-            gerar_relatorio_html()
-    elif escolha == "6":
-            run_pagerank_analysis()
-            run_bfs_analysis()
-            run_dfs_analysis()
-            run_review_quality_ranking()
-            gerar_relatorio_html()
-    elif escolha == "8":  
-            run_dfs_analysis()
-            gerar_relatorio_html()
-    elif escolha == "7":
-            console.print()
-            exibir_painel(
-                "Avançando para a [bold]Etapa 3[/] — Visualizações Avançadas.",
-                "Próxima Etapa",
-                "blue"
-            )
-            return "stage3"
+        run_dfs_analysis()
+        gerar_relatorio_html()
     elif escolha == "9":
-            run_review_quality_ranking()
-            gerar_relatorio_html()
+        run_review_quality_ranking()
+        gerar_relatorio_html()
+    elif escolha == "6":
+        run_pagerank_analysis()
+        run_bfs_analysis()
+        run_dfs_analysis()
+        run_review_quality_ranking()
+        gerar_relatorio_html()
+    elif escolha == "7":
+        console.print()
+        exibir_painel(
+            "Avançando para a [bold]Etapa 3[/] — Visualizações Avançadas.",
+            "Próxima Etapa",
+            "blue"
+        )
+        return "stage3"
     elif escolha == "10":
-            console.print()
-            exibir_painel(
-                "Retornando à [bold]Etapa 1[/] para reconstruir o grafo com outro escopo.",
-                "Voltar",
-                "yellow"
-            )
-            return "back"
+        console.print()
+        exibir_painel(
+            "Retornando à [bold]Etapa 1[/] para reconstruir o grafo com outro escopo.",
+            "Voltar",
+            "yellow"
+        )
+        return "back"
     else:
-            # "0" ou None (Ctrl+C) → encerrar
-            return "exit"
+        # "0" ou None (Ctrl+C) → encerrar
+        return "exit"
 
 
 def _menu_visualizacoes():
