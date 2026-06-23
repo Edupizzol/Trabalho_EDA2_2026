@@ -1,5 +1,15 @@
 # Trabalho_EDA2_2026
 
+## Grupo 03
+
+| Integrante       | Matrícula |
+|------------------|-----------|
+| Eduardo Jesus    | 251008114  |
+| Maria Eduarda G. | 242015924  |
+| Pedro Druck      | 241040332  |
+| Sahuan Melo      |  242024923  |
+| Zayra Moraes     | 242015989 |
+
 ## Análise de Utilidade em Reviews de E-commerce por meio de Grafos de Coocorrência
 
 ### Descrição
