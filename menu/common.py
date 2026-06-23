@@ -105,9 +105,28 @@ def pipeline_grafos_e_visualizacao(input_amostra_dir, processed_dir, output_opca
                     todas_palavras_validas.add(u_word)
                     todas_palavras_validas.add(v_word)
 
-        palavras_secundarias = list(todas_palavras_validas - set(top_5_words))
-        qtd_amostrar = max(1, int(len(palavras_secundarias) * 0.20))
-        secundarias_amostradas = random.sample(palavras_secundarias, min(len(palavras_secundarias), qtd_amostrar))
+
+        vizinhos_dos_hubs = set()
+        for u_word, v_word, w in arestas_validas:
+            if u_word in top_5_words:
+                vizinhos_dos_hubs.add(v_word)
+            if v_word in top_5_words:
+                vizinhos_dos_hubs.add(u_word)
+
+
+        MAX_SECUNDARIAS = 25
+        secundarias_amostradas = list(vizinhos_dos_hubs - set(top_5_words))
+
+        if len(secundarias_amostradas) > MAX_SECUNDARIAS:        
+            pesos_por_palavra = {}
+            for u_word, v_word, w in arestas_validas:
+                if u_word in top_5_words and v_word in secundarias_amostradas:
+                    pesos_por_palavra[v_word] = max(pesos_por_palavra.get(v_word, 0), w)
+                if v_word in top_5_words and u_word in secundarias_amostradas:
+                    pesos_por_palavra[u_word] = max(pesos_por_palavra.get(u_word, 0), w)
+            secundarias_amostradas = sorted(
+                secundarias_amostradas, key=lambda p: pesos_por_palavra.get(p, 0), reverse=True
+            )[:MAX_SECUNDARIAS]
 
         palavras_permitidas = set(top_5_words).union(secundarias_amostradas)
 
@@ -119,27 +138,32 @@ def pipeline_grafos_e_visualizacao(input_amostra_dir, processed_dir, output_opca
         G.remove_nodes_from(list(nx.isolates(G)))
 
         # Plot da Rede
-        plt.figure(figsize=(11, 9))
+        plt.figure(figsize=(13, 11))
         plt.title(f"Grafo de Coocorrência Semântica (Enxuto) - {cat.upper()}", fontsize=13, fontweight="bold", pad=10)
 
-        pos = nx.spring_layout(G, k=1.5, iterations=100, seed=42)
+        pos = nx.kamada_kawai_layout(G)
         node_colors = ['#FF4500' if node in top_5_words else '#A6CEE3' for node in G.nodes()]
-        node_sizes = [950 if node in top_5_words else 220 for node in G.nodes()]
+        node_sizes = [1100 if node in top_5_words else 280 for node in G.nodes()]
 
-        nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=node_sizes, alpha=0.85)
-        nx.draw_networkx_edges(G, pos, alpha=0.12, edge_color="gray")
+        nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=node_sizes, alpha=0.9)
+        nx.draw_networkx_edges(G, pos, alpha=0.2, edge_color="gray", width=0.8)
 
-        labels = {node: node for node in G.nodes()}
+        labels_hubs = {node: node for node in G.nodes() if node in top_5_words}
+        labels_secundarias = {node: node for node in G.nodes() if node not in top_5_words}
+
         nx.draw_networkx_labels(
-            G, pos, labels=labels,
-            font_size=9,
-            font_family="sans-serif",
-            font_weight="bold",
-            bbox=dict(facecolor='white', edgecolor='none', alpha=0.75, pad=1.5)
+            G, pos, labels=labels_hubs,
+            font_size=11, font_family="sans-serif", font_weight="bold",
+            bbox=dict(facecolor='white', edgecolor='#FF4500', alpha=0.9, pad=2)
+        )
+        nx.draw_networkx_labels(
+            G, pos, labels=labels_secundarias,
+            font_size=7.5, font_family="sans-serif",
+            bbox=dict(facecolor='white', edgecolor='none', alpha=0.6, pad=1)
         )
 
         plt.axis('off')
-        plt.tight_layout()
+        plt.tight_layout() 
 
         img_graph_filename = f"{cat}_vis_rede.png"
         img_graph_path = os.path.join(output_opcao_dir, img_graph_filename)
