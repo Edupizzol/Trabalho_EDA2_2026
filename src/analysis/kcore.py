@@ -161,14 +161,14 @@ def generate_kcore_report(filepath, summary_data):
     lines.append("")
     lines.append("## Metodologia")
     lines.append("O algoritmo K-Core funciona descascando recursivamente a rede. Nós com grau 1 são removidos, depois nós com grau menor ou igual a 2, e assim por diante. Esse processo revela a topologia concêntrica da rede:")
-    lines.append("- As camadas externas (valores de $k$ menores) contêm palavras periféricas, ruídos e termos com conexões fracas ou circunstanciais.")
+    lines.append("- As camadas externas (valores de k menores) contêm palavras periféricas, ruídos e termos com conexões fracas ou circunstanciais.")
     lines.append("- O núcleo central (K-max core) contém a espinha dorsal inquebrável do discurso — os termos que permanecem densamente interconectados mesmo após a eliminação de toda a periferia.")
     lines.append("")
     lines.append("## Resumo das Camadas de Coocorrência")
     lines.append("")
-    lines.append("| Categoria | Core Mínimo ($K_{min}$) | Core Máximo ($K_{max}$) | Tamanho do Núcleo Central (Nós) | Termos Dominantes do Núcleo (K-max) |")
+    lines.append("| Categoria | Core Mínimo (K-min) | Core Máximo (K-max) | Tamanho do Núcleo Central (Nós) | Termos Dominantes do Núcleo (K-max) |")
     lines.append("|---|---|---|---|---|")
-
+    
     for cat in ["bad_reviews", "mid_reviews", "good_reviews"]:
         data = summary_data.get(cat)
         if not data:
@@ -190,9 +190,9 @@ def generate_kcore_report(filepath, summary_data):
     lines.append("## Análise Estrutural e Interpretação dos Resultados")
     lines.append("")
     lines.append("### 1. Resiliência do Discurso e Filtragem de Ruído")
-    lines.append("A decomposição K-Core atua como uma barreira robusta contra reações passionais ou ad-hoc. Palavras emocionais isoladas ou erros ortográficos comuns de digitação que ocorrem esporadicamente são empurrados para os anéis de $k=1$ ou $k=2$, por não possuírem conexões sistemáticas.")
+    lines.append("A decomposição K-Core atua como uma barreira robusta contra reações passionais ou ad-hoc. Palavras emocionais isoladas ou erros ortográficos comuns de digitação que ocorrem esporadicamente são empurrados para os anéis de k=1 ou k=2, por não possuírem conexões sistemáticas.")
     lines.append("")
-    lines.append("- **Nas reviews GOOD (Alta Utilidade)**: O núcleo inquebrável do grafo é composto por substantivos e adjetivos de alta especificação técnica e funcional. A densidade do núcleo de maior $k$ demonstra que os usuários expressam satisfação por meio de descrições consistentes sobre atributos de valor real (como qualidade, entrega, excelente custo-benefício).")
+    lines.append("- **Nas reviews GOOD (Alta Utilidade)**: O núcleo inquebrável do grafo é composto por substantivos e adjetivos de alta especificação técnica e funcional. A densidade do núcleo de maior k demonstra que os usuários expressam satisfação por meio de descrições consistentes sobre atributos de valor real (como qualidade, entrega, excelente custo-benefício).")
     lines.append("- **Nas reviews BAD (Baixa Utilidade)**: O núcleo K-max é estruturalmente menor ou dominado por queixas genéricas e palavras de sentimento geral. Isso indica que as reclamações de baixa utilidade carecem de detalhamento técnico sobre o produto, concentrando-se de forma redundante e sem conectividade periférica em pouques expressões de frustração.")
     lines.append("")
     lines.append("### 2. A 'Cebola' do Discurso na Prática")

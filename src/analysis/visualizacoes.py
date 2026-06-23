@@ -555,8 +555,8 @@ def gerar_alvo_kcore() -> bool:
 ## O que é este gráfico?
 
 Este gráfico espacializa a **Decomposição K-Core** (conhecida academicamente como a "Cebola do Discurso") em anéis concêntricos:
-- **A borda externa ($k = K_{min}$)**: agrupa as palavras periféricas, com menor resiliência no discurso e associações fracas.
-- **O centro exato ($k = K_{max}$)**: agrupa o núcleo inquebrável da rede.
+- **A borda externa (k = K-min)**: agrupa as palavras periféricas, com menor resiliência no discurso e associações fracas.
+- **O centro exato (k = K-max)**: agrupa o núcleo inquebrável da rede.
 - **Tamanho dos nós**: proporcional ao PageRank de cada palavra.
 - **Cor dos nós**: gradiente que esquenta (de azul/roxo a amarelo/laranja) em direção ao núcleo duro.
 
@@ -566,7 +566,7 @@ Este gráfico espacializa a **Decomposição K-Core** (conhecida academicamente 
 
 ## O que podemos concluir?
 
-- **Densidade central**: se o núcleo central ($K_{max}$) for densamente povoado e apresentar altos scores de PageRank, isso comprova a existência de uma estrutura discursiva robusta e coesa.
+- **Densidade central**: se o núcleo central (K-max) for densamente povoado e apresentar altos scores de PageRank, isso comprova a existência de uma estrutura discursiva robusta e coesa.
 - **Contraste de termos**: as palavras que habitam o centro diferenciam drasticamente a experiência do usuário. Em avaliações positivas, temos termos funcionais e qualitativos sólidos; em negativas, termos logísticos ou queixas redundantes.
 """)
     log_ok("Markdown 'kcore_target_chart.md' gerado.")
