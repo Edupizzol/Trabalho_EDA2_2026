@@ -125,7 +125,19 @@ def _coletar_secoes():
         secoes.append(("bfs", "Vizinhança Semântica (BFS)", _md_arquivo_para_html(md_bfs)))
         log_info("Relatório de BFS incluído.")
 
-    # 4. Visualizações Avançadas (Etapa 3) — um MD por gráfico, em ordem fixa.
+    # 4. Relatório de K-Core.
+    md_kcore = os.path.join("outputs", "reports", "kcore_decomposition.md")
+    if os.path.exists(md_kcore):
+        secoes.append(("kcore", "Decomposição K-Core", _md_arquivo_para_html(md_kcore)))
+        log_info("Relatório de K-Core incluído.")
+
+    # 5. Relatório de Sankey.
+    md_sankey = os.path.join("outputs", "reports", "sankey_flow.md")
+    if os.path.exists(md_sankey):
+        secoes.append(("sankey", "Fluxo Semântico (Sankey)", _md_arquivo_para_html(md_sankey)))
+        log_info("Relatório de Fluxo Semântico (Sankey) incluído.")
+
+    # 6. Visualizações Avançadas (Etapa 3) — um MD por gráfico, em ordem fixa.
     vis_dir = os.path.join("outputs", "visualizacoes")
     _ORDEM_VIS = [
         ("distribuicao_grau",    "Distribuição de Grau"),
@@ -133,6 +145,8 @@ def _coletar_secoes():
         ("heatmap_coocorrencia", "Heatmap de Coocorrência"),
         ("scatter_deslocamento", "Scatter de Deslocamento"),
         ("wordcloud_pagerank",   "Word Cloud (PageRank)"),
+        ("kcore_target_chart",   "Gráfico de Alvo (K-Core)"),
+        ("sankey_flow_chart",    "Diagramas de Sankey Estáticos"),
     ]
     partes_vis = []
     for slug, titulo_vis in _ORDEM_VIS:

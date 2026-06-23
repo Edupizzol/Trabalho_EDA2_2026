@@ -11,12 +11,16 @@ from menu.opcao2.executor import executar_opcao_2
 from menu.opcao3.executor import executar_opcao_3
 from src.analysis.pagerank_runner import run_pagerank_analysis
 from src.analysis.bfs import run_bfs_analysis
+from src.analysis.kcore import run_kcore_analysis
+from src.analysis.sankey import run_sankey_analysis
 from src.analysis.visualizacoes import (
     gerar_distribuicao_grau,
     gerar_comparativo_top10,
     gerar_heatmap_coocorrencia,
     gerar_scatter_deslocamento,
     gerar_wordcloud_pagerank,
+    gerar_alvo_kcore,
+    gerar_sankey_flow_charts,
     run_todas_visualizacoes,
 )
 from src.reporting.html_consolidator import gerar_relatorio_html, limpar_artefatos_de_analise
@@ -54,8 +58,11 @@ _TEXTO_ETAPA2 = (
     "  [dim]\"Quais palavras dominam o discurso de cada nível?\"[/]\n\n"
     "[bold]BFS Contextual[/]\n"
     "  Explora a vizinhança de palavras-chave, mostrando com quais\n"
-    "  termos elas mais coocorrem em cada faixa.\n"
-    "  [dim]\"Em que contexto uma palavra aparece em cada nível?\"[/]\n\n"
+    "  termos elas mais coocorrem em cada faixa.\n\n"
+    "[bold]Decomposição K-Core[/]\n"
+    "  Descasca a rede para identificar a espinha dorsal inquebrável (K-max core).\n\n"
+    "[bold]Diagrama de Sankey[/]\n"
+    "  Rastreia o fluxo semântico e as ramificações a partir do hub 'produto'.\n\n"
     "[dim]O relatório HTML consolidado é atualizado automaticamente\n"
     "após cada análise -> outputs/relatorio_consolidado.html[/]"
 )
@@ -66,7 +73,9 @@ _TEXTO_ETAPA3 = (
     "[bold]2.[/] Comparativo Top 10      [dim]— relevância lado a lado entre BAD/MID/GOOD[/]\n"
     "[bold]3.[/] Heatmap de Coocorrência [dim]— combos semânticos entre os hubs[/]\n"
     "[bold]4.[/] Scatter de Deslocamento [dim]— palavras que mais discriminam satisfação[/]\n"
-    "[bold]5.[/] Word Cloud (PageRank)   [dim]— impressão visual do vocabulário dominante[/]\n\n"
+    "[bold]5.[/] Word Cloud (PageRank)   [dim]— impressão visual do vocabulário dominante[/]\n"
+    "[bold]6.[/] Alvo de K-Core          [dim]— anéis concêntricos da estrutura Cebola[/]\n"
+    "[bold]7.[/] Diagrama de Sankey      [dim]— fluxos semânticos Bézier (Ego-Network)[/]\n\n"
     "[dim]Cada gráfico gera um PNG + Markdown e é incluído no relatório HTML consolidado.[/]"
 )
 
@@ -133,7 +142,9 @@ def _menu_analises_adicionais():
             choices=[
                 Choice("PageRank — palavras mais centrais (tabela comparativa Top 15)", value="4"),
                 Choice("BFS Contextual — vizinhança semântica de palavras-chave", value="5"),
-                Choice("Execute Todas As Análises Adicionais (PageRank e BFS Contextual)", value="6"),
+                Choice("Decomposição K-Core — descasca a rede para encontrar o núcleo (K-max)", value="8"),
+                Choice("Diagrama de Sankey — fluxo semântico a partir do hub 'produto'", value="10"),
+                Choice("Execute Todas As Análises Adicionais (PageRank, BFS, K-Core e Sankey)", value="6"),
                 Choice("Visualizações Avançadas — avançar para a Etapa 3", value="7"),
                 Choice("Voltar — reconstruir o grafo com outro escopo", value="9"),
                 Choice("Sair", value="0"),
@@ -147,9 +158,17 @@ def _menu_analises_adicionais():
     elif escolha == "5":
             run_bfs_analysis()
             gerar_relatorio_html()
+    elif escolha == "8":
+            run_kcore_analysis()
+            gerar_relatorio_html()
+    elif escolha == "10":
+            run_sankey_analysis()
+            gerar_relatorio_html()
     elif escolha == "6":
             run_pagerank_analysis()
             run_bfs_analysis()
+            run_kcore_analysis()
+            run_sankey_analysis()
             gerar_relatorio_html()
     elif escolha == "7":
             console.print()
@@ -194,8 +213,10 @@ def _menu_visualizacoes():
                 Choice("3 — Heatmap de Coocorrência (combos semânticos entre hubs)", value="3"),
                 Choice("4 — Scatter de Deslocamento (palavras que discriminam satisfação)", value="4"),
                 Choice("5 — Word Cloud (PageRank)   (impressão visual do vocabulário)", value="5"),
-                Choice("6 — Gerar Todas as Visualizações (1 a 5)", value="6"),
-                Choice("7 — Voltar — retornar à Etapa 2", value="7"),
+                Choice("6 — Gráfico de Alvo (K-Core)  (anéis concêntricos da Cebola)", value="8"),
+                Choice("7 — Diagrama de Sankey      (fluxos semânticos estáticos)", value="10"),
+                Choice("8 — Gerar Todas as Visualizações (1 a 7)", value="6"),
+                Choice("9 — Voltar — retornar à Etapa 2", value="7"),
                 Choice("0 — Sair", value="0"),
             ],
             style=ESTILO,
@@ -215,6 +236,12 @@ def _menu_visualizacoes():
             gerar_relatorio_html()
         elif escolha == "5":
             gerar_wordcloud_pagerank()
+            gerar_relatorio_html()
+        elif escolha == "8":
+            gerar_alvo_kcore()
+            gerar_relatorio_html()
+        elif escolha == "10":
+            gerar_sankey_flow_charts()
             gerar_relatorio_html()
         elif escolha == "6":
             run_todas_visualizacoes()

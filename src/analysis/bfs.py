@@ -85,7 +85,7 @@ def run_bfs_analysis():
         builder.id_to_word = dados_json["grafo"]["id_to_word"]
         builder.word_to_id = dados_json["grafo"]["word_to_id"]
 
-        markdown_lines.append(f"## 📊 Categoria: {cat.upper()}")
+        markdown_lines.append(f"## Categoria: {cat.upper()}")
         markdown_lines.append("")
 
         log_info(f"Analisando adjacências para a categoria: {cat}...")
@@ -95,7 +95,7 @@ def run_bfs_analysis():
             if not res_camadas:
                 continue
 
-            markdown_lines.append(f"### 🔍 Palavra-Raiz: `{raiz}`")
+            markdown_lines.append(f"### Palavra-Raiz: `{raiz}`")
 
             # Camada 1: Conexões Diretas
             c1_text = ", ".join([f"{p} ({w})" for p, w in res_camadas[1][:8]]) or "Nenhuma"

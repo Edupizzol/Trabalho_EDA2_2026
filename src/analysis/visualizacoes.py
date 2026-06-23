@@ -9,6 +9,8 @@ import matplotlib.colors as mcolors
 import numpy as np
 
 from src.analysis.pagerank import PageRankCalculator
+from src.analysis.kcore import calculate_core_numbers
+from src.analysis.sankey import run_sankey_analysis
 from src.interface.console import exibir_secao, log_info, log_ok, log_aviso, log_erro, log_dados
 
 
@@ -441,16 +443,189 @@ As palavras maiores e mais escuras são as mais centrais no discurso da categori
     return True
 
 
+# ── Gráfico 6: Alvo de K-Core ────────────────────────────────────────────────
+
+def gerar_alvo_kcore() -> bool:
+    """Gera o gráfico de anéis concêntricos (alvo de K-Core) para as 3 categorias."""
+    exibir_secao("VISUALIZAÇÃO AVALIATIVA — ALVO DE K-CORE")
+    dados = _carregar_grafos()
+    if dados is None:
+        return False
+
+    os.makedirs(_OUTPUT_DIR, exist_ok=True)
+    calc_pr = PageRankCalculator()
+
+    fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+    fig.suptitle("A Cebola do Discurso — Alvo de K-Core", fontsize=14, fontweight="bold", y=0.98)
+
+    for i, cat in enumerate(_CATEGORIAS):
+        g = dados[cat]["graph"]
+        id_to_word = dados[cat]["id_to_word"]
+        
+        core_numbers = calculate_core_numbers(g)
+        pr_scores = calc_pr.calculate(g, id_to_word)
+
+        # Mapeia IDs para palavras
+        word_cores = {}
+        for node_id_str, k_val in core_numbers.items():
+            idx = int(node_id_str)
+            if idx < len(id_to_word):
+                word = id_to_word[idx]
+                word_cores[word] = k_val
+
+        # Agrupa palavras por core
+        cores_grouped = {}
+        for w, k in word_cores.items():
+            cores_grouped.setdefault(k, []).append(w)
+
+        ax = axes[i]
+        ax.set_aspect("equal")
+        ax.axis("off")
+        ax.set_facecolor("#fcfcfc")
+        ax.set_title(f"{_LABELS[cat]} Reviews", fontsize=11, fontweight="bold", color=_CORES[cat], pad=15)
+
+        K_values = sorted(list(cores_grouped.keys()))
+        if not K_values:
+            continue
+
+        K_max = max(K_values)
+        K_min = min(K_values)
+        
+        # Colormap que vai de azul (periférico) a vermelho/amarelo (núcleo)
+        cmap = plt.cm.plasma
+
+        # Desenha anéis
+        for k in K_values:
+            if K_max == K_min:
+                r = 1.0
+            else:
+                # Raio de 0.2 (K_max) até 1.0 (K_min)
+                r = 1.0 - 0.75 * (k - K_min) / (K_max - K_min)
+
+            # Plota círculo de fundo do anel
+            circle = plt.Circle((0, 0), r, fill=False, color="#D5D8DC", linestyle="--", linewidth=0.9, alpha=0.7)
+            ax.add_patch(circle)
+            
+            # Legenda do nível de core
+            ax.text(0.0, r + 0.015, f"k={k}", fontsize=7.5, color="#7F8C8D", ha="center", va="bottom", alpha=0.8)
+
+            words_in_k = cores_grouped[k]
+            # Ordena por PageRank para focar nas palavras principais
+            words_in_k = sorted(words_in_k, key=lambda w: pr_scores.get(w, 0.0), reverse=True)
+
+            M = len(words_in_k)
+            # Deslocamento angular de fase por anel para espalhar melhor as palavras
+            phase_shift = k * (np.pi / 5.0)
+
+            for idx_w, word in enumerate(words_in_k):
+                theta = (2 * np.pi * idx_w / M) + phase_shift
+                x = r * np.cos(theta)
+                y = r * np.sin(theta)
+
+                pr = pr_scores.get(word, 0.0)
+                # Escala o tamanho da bolinha com base no PageRank
+                node_size = 25 + pr * 4000
+
+                color_norm = (k - K_min) / (K_max - K_min) if K_max != K_min else 0.5
+                node_color = cmap(color_norm)
+
+                # Plota a bolinha do termo
+                ax.scatter(x, y, s=node_size, color=node_color, alpha=0.8, edgecolors="none")
+
+                # Plota rótulo se for do top 6 ou se o anel for pequeno
+                if idx_w < 6 or M <= 6:
+                    ha = "left" if x > 0 else "right"
+                    va = "center"
+                    offset = 0.02
+                    tx = (r + offset) * np.cos(theta)
+                    ty = (r + offset) * np.sin(theta)
+                    
+                    ax.text(tx, ty, word, fontsize=7.5, fontweight="bold", ha=ha, va=va, color="#2C3E50",
+                            bbox=dict(facecolor="white", edgecolor="none", alpha=0.75, pad=0.5))
+
+    plt.tight_layout()
+    _salvar_fig("kcore_target_chart.png")
+    log_ok(f"Gráfico de K-Core salvo em '{_OUTPUT_DIR}/kcore_target_chart.png'")
+
+    # Salva o markdown associado
+    _salvar_md("kcore_target_chart.md", """# Visualização Avançada — Gráfico de Alvo de K-Core (Concentric Rings)
+
+![Gráfico de Alvo K-Core](kcore_target_chart.png)
+
+## O que é este gráfico?
+
+Este gráfico espacializa a **Decomposição K-Core** (conhecida academicamente como a "Cebola do Discurso") em anéis concêntricos:
+- **A borda externa ($k = K_{min}$)**: agrupa as palavras periféricas, com menor resiliência no discurso e associações fracas.
+- **O centro exato ($k = K_{max}$)**: agrupa o núcleo inquebrável da rede.
+- **Tamanho dos nós**: proporcional ao PageRank de cada palavra.
+- **Cor dos nós**: gradiente que esquenta (de azul/roxo a amarelo/laranja) em direção ao núcleo duro.
+
+## Tipo de análise
+
+**Análise topológica concêntrica** — revela a hierarquia de sobrevivência de termos em múltiplas camadas de filtragem de ruído.
+
+## O que podemos concluir?
+
+- **Densidade central**: se o núcleo central ($K_{max}$) for densamente povoado e apresentar altos scores de PageRank, isso comprova a existência de uma estrutura discursiva robusta e coesa.
+- **Contraste de termos**: as palavras que habitam o centro diferenciam drasticamente a experiência do usuário. Em avaliações positivas, temos termos funcionais e qualitativos sólidos; em negativas, termos logísticos ou queixas redundantes.
+""")
+    log_ok("Markdown 'kcore_target_chart.md' gerado.")
+    return True
+
+
+# ── Gráfico 7: Diagrama de Sankey ────────────────────────────────────────────
+
+def gerar_sankey_flow_charts() -> bool:
+    """Gera os diagramas de Sankey usando a análise de fluxos (sankey.py)."""
+    exibir_secao("VISUALIZAÇÃO AVALIATIVA — DIAGRAMAS DE SANKEY (EGO-NETWORK)")
+    try:
+        run_sankey_analysis(hub_word="produto")
+    except Exception as e:
+        log_erro(f"Erro ao gerar diagramas de Sankey: {e}")
+        return False
+
+    # Salva o markdown associado
+    _salvar_md("sankey_flow_chart.md", """# Visualização Avançada — Diagramas de Sankey de Fluxo Semântico
+
+Os diagramas de fluxo de Sankey detalham o comportamento do discurso a partir do principal hub global (**produto**):
+
+- **À esquerda**: O hub central.
+- **Ao centro**: Conexões diretas mais frequentes (Coluna 1).
+- **À direita**: Contextos estendidos (Coluna 2).
+
+> [!NOTE]
+> Para conferir a versão dinâmica, interativa e responsiva destes diagramas, por favor acesse a seção dedicada de **Fluxo Semântico** no topo do seu relatório HTML consolidado.
+
+### Diagramas de Fluxo Estáticos (Bézier Splines)
+
+<table>
+  <tr>
+    <td><img src='sankey_flow_good_reviews.png' width='450' alt='GOOD reviews Flow'/></td>
+    <td><img src='sankey_flow_mid_reviews.png' width='450' alt='MID reviews Flow'/></td>
+  </tr>
+  <tr>
+    <td colspan='2' align='center'>
+      <img src='sankey_flow_bad_reviews.png' width='450' alt='BAD reviews Flow'/>
+    </td>
+  </tr>
+</table>
+""")
+    log_ok("Markdown 'sankey_flow_chart.md' gerado.")
+    return True
+
+
 # ── Runner de todas as visualizações ────────────────────────────────────────
 
 def run_todas_visualizacoes() -> None:
-    """Executa os 5 gráficos em sequência."""
+    """Executa os 7 gráficos em sequência."""
     fns = [
         ("Distribuição de Grau",    gerar_distribuicao_grau),
         ("Comparativo Top 10",      gerar_comparativo_top10),
         ("Heatmap de Coocorrência", gerar_heatmap_coocorrencia),
         ("Scatter de Deslocamento", gerar_scatter_deslocamento),
         ("Word Cloud (PageRank)",   gerar_wordcloud_pagerank),
+        ("Alvo de K-Core",          gerar_alvo_kcore),
+        ("Sankey Flow",             gerar_sankey_flow_charts),
     ]
     for nome, fn in fns:
         ok = fn()
