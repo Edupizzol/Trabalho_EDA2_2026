@@ -131,6 +131,11 @@ def _coletar_secoes():
         secoes.append(("dfs", "Fragmentação Semântica (DFS)", _md_arquivo_para_html(md_dfs)))
         log_info("Relatório de DFS incluído.")
 
+    md_guia = os.path.join("outputs", "reports", "guia_boa_review.md")
+    if os.path.exists(md_guia):
+        secoes.append(("guia_review", "Guia de Boa Review", _md_arquivo_para_html(md_guia)))
+        log_info("Guia de boa review incluído.")
+
     # 5. Visualizações Avançadas (Etapa 3) — um MD por gráfico, em ordem fixa.
     vis_dir = os.path.join("outputs", "visualizacoes")
     _ORDEM_VIS = [

@@ -12,6 +12,7 @@ from menu.opcao3.executor import executar_opcao_3
 from src.analysis.pagerank_runner import run_pagerank_analysis
 from src.analysis.bfs import run_bfs_analysis
 from src.analysis.dfs import run_dfs_analysis
+from src.analysis.review_quality import run_review_quality_ranking
 from src.analysis.visualizacoes import (
     gerar_distribuicao_grau,
     gerar_comparativo_top10,
@@ -60,6 +61,10 @@ _TEXTO_ETAPA2 = (
     "[bold]DFS — Componentes Conexos[/]\n"
     "  Identifica blocos de palavras isolados do restante do vocabulário.\n"
     "  [dim]\"O discurso é unificado ou fragmentado em subtemas?\"[/]\n\n"
+    "[bold]Guia de Boa Review[/]\n"
+    "  Ranqueia palavras associadas a reviews boas vs ruins, com base no\n"
+    "  deslocamento de PageRank entre as categorias.\n"
+    "  [dim]\"O que mencionar para escrever uma review útil?\"[/]\n\n"
     "[dim]O relatório HTML consolidado é atualizado automaticamente\n"
     "após cada análise -> outputs/relatorio_consolidado.html[/]"
 )
@@ -140,7 +145,8 @@ def _menu_analises_adicionais():
                 Choice("DFS — componentes conexos (fragmentação do discurso)", value="8"),
                 Choice("Execute Todas As Análises Adicionais (PageRank, BFS e DFS)", value="6"),
                 Choice("Visualizações Avançadas — avançar para a Etapa 3", value="7"),
-                Choice("Voltar — reconstruir o grafo com outro escopo", value="9"),
+                Choice("Voltar — reconstruir o grafo com outro escopo", value="10"),
+                Choice("Guia de Boa Review — ranking de palavras (deslocamento PageRank)", value="9"),
                 Choice("Sair", value="0"),
             ],
             style=ESTILO,
@@ -156,6 +162,7 @@ def _menu_analises_adicionais():
             run_pagerank_analysis()
             run_bfs_analysis()
             run_dfs_analysis()
+            run_review_quality_ranking()
             gerar_relatorio_html()
     elif escolha == "8":  
             run_dfs_analysis()
@@ -169,6 +176,9 @@ def _menu_analises_adicionais():
             )
             return "stage3"
     elif escolha == "9":
+            run_review_quality_ranking()
+            gerar_relatorio_html()
+    elif escolha == "10":
             console.print()
             exibir_painel(
                 "Retornando à [bold]Etapa 1[/] para reconstruir o grafo com outro escopo.",
