@@ -1,5 +1,6 @@
 import json
 import sys
+import random
 sys.setrecursionlimit(50000)
 from src.interface.console import log_dados
 
@@ -137,6 +138,60 @@ class GraphBuilder:
                 componentes.append(componente_word)
         return componentes
 
+    def detectar_comunidade(self, seed=42):
+        random.seed(seed)
+        componente_para_id=self._componte_como_id()
+        comunidade_final={}
+        offset=0
+
+        for componente_id in componente_para_id:
+            if len(componente_id)==1:
+                unico_id=componente_id[0]
+                comunidade_final[unico_id]=offset
+                offset+=1
+                continue
+
+            subgrafo=self._extrair_subgrafo(componente_id)
+            particao_local=self._louvain_multinivel(subgrafo)
+            ids_locais_unicos = sorted(set(particao_local.values()))
+            mapa_local_para_global = {
+                local_id: offset + i
+                for i, local_id in enumerate(ids_locais_unicos)
+            }
+
+            for word_id, local_comm in particao_local.items():
+                comunidade_final[word_id] = mapa_local_para_global[local_comm]
+
+            offset += len(ids_locais_unicos)
+        return {
+            self.id_to_word[word_id]: comm_id
+            for word_id, comm_id in comunidade_final.items()
+        }
+
+
+def _componentes_como_ids(self):
+
+    visitados = set()
+    componentes = []
+    for vertice_id in self.graph:
+        if vertice_id not in visitados:
+            componente = []
+            self.dfs(vertice_id, visitados, componente)
+            componentes.append(componente)
+    return componentes
+
+
+def _extrair_subgrafo(self, ids_do_componente):
+
+    ids_set = set(ids_do_componente)
+    subgrafo = {}
+    for no_id in ids_do_componente:
+        subgrafo[no_id] = {
+            vizinho: peso
+            for vizinho, peso in self.graph[no_id].items()
+            if vizinho in ids_set
+        }
+    return subgrafo
 def build_graphs_from_categories(processed_dir, categorias):
     import os
     builders = {}
