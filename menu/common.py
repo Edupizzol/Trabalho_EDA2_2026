@@ -58,33 +58,41 @@ def pipeline_grafos_e_visualizacao(input_amostra_dir, processed_dir, output_opca
 
         # 1. CÁLCULO DE RELEVÂNCIA (PAGERANK)
         scores_pr = calc_pr.calculate(graph_dict, id_to_word)
-        top_5 = calc_pr.get_top_k(scores_pr, k=5)
+        TOP_N_BARRAS = 10  # antes era 5
+        top_n = calc_pr.get_top_k(scores_pr, k=TOP_N_BARRAS)
+        top_5 = top_n[:5]  # mantém top_5 pra ser usado depois no grafo de rede
         top_5_words = [word for word, _ in top_5]
 
         # Calcular a soma total do PageRank para converter em porcentagem do ecossistema
         total_pr_score = sum(scores_pr.values()) if scores_pr.values() else 1
 
         # 2. GERAÇÃO DO GRÁFICO DE BARRAS HORIZONTAIS (DISTRIBUIÇÃO DE RELEVÂNCIA)
-        plt.figure(figsize=(7, 4))
+        plt.figure(figsize=(8, 6))
+        palavras_barras = [word for word, _ in top_n][::-1]
+        porcentagens_barras = [(score / total_pr_score) * 100 for _, score in top_n][::-1]
 
-        # Inverte a ordem para a palavra mais relevante ficar no topo do gráfico de barras horizontais
-        palavras_barras = [word for word, _ in top_5][::-1]
-        porcentagens_barras = [(score / total_pr_score) * 100 for _, score in top_5][::-1]
+        cmap = plt.colormaps.get_cmap('Blues')
+        cores = [cmap(0.4 + 0.55 * (i / max(len(porcentagens_barras) - 1, 1)))
+                 for i in range(len(porcentagens_barras))]
 
-        # Desenha as barras com uma cor limpa e moderna
-        bars = plt.barh(palavras_barras, porcentagens_barras, color='#1F78B4', edgecolor='none', height=0.6)
+        bars = plt.barh(palavras_barras, porcentagens_barras, color=cores, edgecolor='white', height=0.7)
 
-        # Adiciona o valor de porcentagem impresso na ponta de cada barra
         for bar in bars:
             width = bar.get_width()
-            plt.text(width + 0.2, bar.get_y() + bar.get_height() / 2, f'{width:.2f}%',
-                     va='center', ha='left', fontsize=9, fontweight='bold', color='#333333')
+            plt.text(width + max(porcentagens_barras) * 0.015, bar.get_y() + bar.get_height() / 2,
+                     f'{width:.2f}%', va='center', ha='left', fontsize=9, fontweight='bold', color='#2c3e50')
 
-        plt.title(f"Top 5 Palavras por Importância Relativa - {cat.upper()}", fontsize=11, fontweight="bold", pad=15)
-        plt.xlabel("Participação de Influência no Grafo (%)", fontsize=9)
-        plt.xlim(0, max(porcentagens_barras) * 1.2)  # Dá um respiro para o texto não cortar
+        plt.title(f"Top {TOP_N_BARRAS} Palavras por Importância Relativa - {cat.upper()}",
+                  fontsize=13, fontweight="bold", pad=18, color='#2c3e50')
+        plt.xlabel("Participação de Influência no Grafo (%)", fontsize=10, color='#555555')
+        plt.xlim(0, max(porcentagens_barras) * 1.18)
+        plt.grid(axis='x', linestyle='--', alpha=0.3)
+        plt.gca().set_facecolor('#fafafa')
         plt.gca().spines['top'].set_visible(False)
         plt.gca().spines['right'].set_visible(False)
+        plt.gca().spines['left'].set_visible(False)
+        plt.gca().spines['bottom'].set_color('#cccccc')
+        plt.tick_params(axis='y', labelsize=10)
         plt.tight_layout()
 
         img_bar_filename = f"{cat}_distribuicao_barras.png"
