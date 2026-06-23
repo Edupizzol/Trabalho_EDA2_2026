@@ -58,33 +58,41 @@ def pipeline_grafos_e_visualizacao(input_amostra_dir, processed_dir, output_opca
 
         # 1. CÁLCULO DE RELEVÂNCIA (PAGERANK)
         scores_pr = calc_pr.calculate(graph_dict, id_to_word)
-        top_5 = calc_pr.get_top_k(scores_pr, k=5)
+        TOP_N_BARRAS = 10  # antes era 5
+        top_n = calc_pr.get_top_k(scores_pr, k=TOP_N_BARRAS)
+        top_5 = top_n[:5]  # mantém top_5 pra ser usado depois no grafo de rede
         top_5_words = [word for word, _ in top_5]
 
         # Calcular a soma total do PageRank para converter em porcentagem do ecossistema
         total_pr_score = sum(scores_pr.values()) if scores_pr.values() else 1
 
         # 2. GERAÇÃO DO GRÁFICO DE BARRAS HORIZONTAIS (DISTRIBUIÇÃO DE RELEVÂNCIA)
-        plt.figure(figsize=(7, 4))
+        plt.figure(figsize=(8, 6))
+        palavras_barras = [word for word, _ in top_n][::-1]
+        porcentagens_barras = [(score / total_pr_score) * 100 for _, score in top_n][::-1]
 
-        # Inverte a ordem para a palavra mais relevante ficar no topo do gráfico de barras horizontais
-        palavras_barras = [word for word, _ in top_5][::-1]
-        porcentagens_barras = [(score / total_pr_score) * 100 for _, score in top_5][::-1]
+        cmap = plt.colormaps.get_cmap('Blues')
+        cores = [cmap(0.4 + 0.55 * (i / max(len(porcentagens_barras) - 1, 1)))
+                 for i in range(len(porcentagens_barras))]
 
-        # Desenha as barras com uma cor limpa e moderna
-        bars = plt.barh(palavras_barras, porcentagens_barras, color='#1F78B4', edgecolor='none', height=0.6)
+        bars = plt.barh(palavras_barras, porcentagens_barras, color=cores, edgecolor='white', height=0.7)
 
-        # Adiciona o valor de porcentagem impresso na ponta de cada barra
         for bar in bars:
             width = bar.get_width()
-            plt.text(width + 0.2, bar.get_y() + bar.get_height() / 2, f'{width:.2f}%',
-                     va='center', ha='left', fontsize=9, fontweight='bold', color='#333333')
+            plt.text(width + max(porcentagens_barras) * 0.015, bar.get_y() + bar.get_height() / 2,
+                     f'{width:.2f}%', va='center', ha='left', fontsize=9, fontweight='bold', color='#2c3e50')
 
-        plt.title(f"Top 5 Palavras por Importância Relativa - {cat.upper()}", fontsize=11, fontweight="bold", pad=15)
-        plt.xlabel("Participação de Influência no Grafo (%)", fontsize=9)
-        plt.xlim(0, max(porcentagens_barras) * 1.2)  # Dá um respiro para o texto não cortar
+        plt.title(f"Top {TOP_N_BARRAS} Palavras por Importância Relativa - {cat.upper()}",
+                  fontsize=13, fontweight="bold", pad=18, color='#2c3e50')
+        plt.xlabel("Participação de Influência no Grafo (%)", fontsize=10, color='#555555')
+        plt.xlim(0, max(porcentagens_barras) * 1.18)
+        plt.grid(axis='x', linestyle='--', alpha=0.3)
+        plt.gca().set_facecolor('#fafafa')
         plt.gca().spines['top'].set_visible(False)
         plt.gca().spines['right'].set_visible(False)
+        plt.gca().spines['left'].set_visible(False)
+        plt.gca().spines['bottom'].set_color('#cccccc')
+        plt.tick_params(axis='y', labelsize=10)
         plt.tight_layout()
 
         img_bar_filename = f"{cat}_distribuicao_barras.png"
@@ -105,9 +113,28 @@ def pipeline_grafos_e_visualizacao(input_amostra_dir, processed_dir, output_opca
                     todas_palavras_validas.add(u_word)
                     todas_palavras_validas.add(v_word)
 
-        palavras_secundarias = list(todas_palavras_validas - set(top_5_words))
-        qtd_amostrar = max(1, int(len(palavras_secundarias) * 0.20))
-        secundarias_amostradas = random.sample(palavras_secundarias, min(len(palavras_secundarias), qtd_amostrar))
+
+        vizinhos_dos_hubs = set()
+        for u_word, v_word, w in arestas_validas:
+            if u_word in top_5_words:
+                vizinhos_dos_hubs.add(v_word)
+            if v_word in top_5_words:
+                vizinhos_dos_hubs.add(u_word)
+
+
+        MAX_SECUNDARIAS = 25
+        secundarias_amostradas = list(vizinhos_dos_hubs - set(top_5_words))
+
+        if len(secundarias_amostradas) > MAX_SECUNDARIAS:        
+            pesos_por_palavra = {}
+            for u_word, v_word, w in arestas_validas:
+                if u_word in top_5_words and v_word in secundarias_amostradas:
+                    pesos_por_palavra[v_word] = max(pesos_por_palavra.get(v_word, 0), w)
+                if v_word in top_5_words and u_word in secundarias_amostradas:
+                    pesos_por_palavra[u_word] = max(pesos_por_palavra.get(u_word, 0), w)
+            secundarias_amostradas = sorted(
+                secundarias_amostradas, key=lambda p: pesos_por_palavra.get(p, 0), reverse=True
+            )[:MAX_SECUNDARIAS]
 
         palavras_permitidas = set(top_5_words).union(secundarias_amostradas)
 
@@ -119,27 +146,32 @@ def pipeline_grafos_e_visualizacao(input_amostra_dir, processed_dir, output_opca
         G.remove_nodes_from(list(nx.isolates(G)))
 
         # Plot da Rede
-        plt.figure(figsize=(11, 9))
+        plt.figure(figsize=(13, 11))
         plt.title(f"Grafo de Coocorrência Semântica (Enxuto) - {cat.upper()}", fontsize=13, fontweight="bold", pad=10)
 
-        pos = nx.spring_layout(G, k=1.5, iterations=100, seed=42)
+        pos = nx.kamada_kawai_layout(G)
         node_colors = ['#FF4500' if node in top_5_words else '#A6CEE3' for node in G.nodes()]
-        node_sizes = [950 if node in top_5_words else 220 for node in G.nodes()]
+        node_sizes = [1100 if node in top_5_words else 280 for node in G.nodes()]
 
-        nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=node_sizes, alpha=0.85)
-        nx.draw_networkx_edges(G, pos, alpha=0.12, edge_color="gray")
+        nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=node_sizes, alpha=0.9)
+        nx.draw_networkx_edges(G, pos, alpha=0.2, edge_color="gray", width=0.8)
 
-        labels = {node: node for node in G.nodes()}
+        labels_hubs = {node: node for node in G.nodes() if node in top_5_words}
+        labels_secundarias = {node: node for node in G.nodes() if node not in top_5_words}
+
         nx.draw_networkx_labels(
-            G, pos, labels=labels,
-            font_size=9,
-            font_family="sans-serif",
-            font_weight="bold",
-            bbox=dict(facecolor='white', edgecolor='none', alpha=0.75, pad=1.5)
+            G, pos, labels=labels_hubs,
+            font_size=11, font_family="sans-serif", font_weight="bold",
+            bbox=dict(facecolor='white', edgecolor='#FF4500', alpha=0.9, pad=2)
+        )
+        nx.draw_networkx_labels(
+            G, pos, labels=labels_secundarias,
+            font_size=7.5, font_family="sans-serif",
+            bbox=dict(facecolor='white', edgecolor='none', alpha=0.6, pad=1)
         )
 
         plt.axis('off')
-        plt.tight_layout()
+        plt.tight_layout() 
 
         img_graph_filename = f"{cat}_vis_rede.png"
         img_graph_path = os.path.join(output_opcao_dir, img_graph_filename)

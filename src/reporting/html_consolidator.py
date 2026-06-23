@@ -125,19 +125,18 @@ def _coletar_secoes():
         secoes.append(("bfs", "Vizinhança Semântica (BFS)", _md_arquivo_para_html(md_bfs)))
         log_info("Relatório de BFS incluído.")
 
-    # 4. Relatório de K-Core.
-    md_kcore = os.path.join("outputs", "reports", "kcore_decomposition.md")
-    if os.path.exists(md_kcore):
-        secoes.append(("kcore", "Decomposição K-Core", _md_arquivo_para_html(md_kcore)))
-        log_info("Relatório de K-Core incluído.")
+    # 4. Relatório de DFS (componentes conexos) 
+    md_dfs = os.path.join("outputs", "reports", "dfs_components.md")
+    if os.path.exists(md_dfs):
+        secoes.append(("dfs", "Fragmentação Semântica (DFS)", _md_arquivo_para_html(md_dfs)))
+        log_info("Relatório de DFS incluído.")
 
-    # 5. Relatório de Sankey.
-    md_sankey = os.path.join("outputs", "reports", "sankey_flow.md")
-    if os.path.exists(md_sankey):
-        secoes.append(("sankey", "Fluxo Semântico (Sankey)", _md_arquivo_para_html(md_sankey)))
-        log_info("Relatório de Fluxo Semântico (Sankey) incluído.")
+    md_guia = os.path.join("outputs", "reports", "guia_boa_review.md")
+    if os.path.exists(md_guia):
+        secoes.append(("guia_review", "Guia de Boa Review", _md_arquivo_para_html(md_guia)))
+        log_info("Guia de boa review incluído.")
 
-    # 6. Visualizações Avançadas (Etapa 3) — um MD por gráfico, em ordem fixa.
+    # 5. Visualizações Avançadas (Etapa 3) — um MD por gráfico, em ordem fixa.
     vis_dir = os.path.join("outputs", "visualizacoes")
     _ORDEM_VIS = [
         ("distribuicao_grau",    "Distribuição de Grau"),
