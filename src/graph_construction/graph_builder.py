@@ -90,6 +90,7 @@ class GraphBuilder:
                 "numero_componentes": len(self.componentes_conectados()),
                 "componentes_conectados": self.componentes_conectados(),
                 "graus": [self.degree(word) for word in self.id_to_word],
+                "comunidades": self.detectar_comunidade(),
             }
         }
 
@@ -169,29 +170,198 @@ class GraphBuilder:
         }
 
 
-def _componentes_como_ids(self):
+    def _componte_como_id(self):
 
-    visitados = set()
-    componentes = []
-    for vertice_id in self.graph:
-        if vertice_id not in visitados:
-            componente = []
-            self.dfs(vertice_id, visitados, componente)
-            componentes.append(componente)
-    return componentes
+        visitados = set()
+        componentes = []
+        for vertice_id in self.graph:
+            if vertice_id not in visitados:
+                componente = []
+                self.dfs(vertice_id, visitados, componente)
+                componentes.append(componente)
+        return componentes
 
 
-def _extrair_subgrafo(self, ids_do_componente):
+    def _extrair_subgrafo(self, ids_do_componente):
 
-    ids_set = set(ids_do_componente)
-    subgrafo = {}
-    for no_id in ids_do_componente:
-        subgrafo[no_id] = {
-            vizinho: peso
-            for vizinho, peso in self.graph[no_id].items()
-            if vizinho in ids_set
+        ids_set = set(ids_do_componente)
+        subgrafo = {}
+        for no_id in ids_do_componente:
+            subgrafo[no_id] = {
+                vizinho: peso
+                for vizinho, peso in self.graph[no_id].items()
+                if vizinho in ids_set
+            }
+        return subgrafo
+
+    def _louvain_multinivel(self, grafo_inicial):
+        """
+        Retorna:
+            dict { id_original: community_id }
+        """
+        EPSILON = 1e-9
+
+        grafo_atual = grafo_inicial
+
+        node_para_no_original = {
+            no_id: [no_id] for no_id in grafo_inicial
         }
-    return subgrafo
+
+        Q_anterior = float('-inf')
+
+        while True:
+            comunidades_nivel = self._fase1_otimizacao_local(grafo_atual)
+            Q_atual = self._calcular_modularidade(grafo_atual, comunidades_nivel)
+
+            if Q_atual - Q_anterior <= EPSILON:
+                break
+
+            Q_anterior = Q_atual
+
+            nova_correspondencia = {}
+            for no_nivel, comunidade in comunidades_nivel.items():
+                for id_original in node_para_no_original[no_nivel]:
+                    nova_correspondencia[id_original] = comunidade
+            ultima_correspondencia_valida = nova_correspondencia
+
+            n_nos_antes = len(grafo_atual)
+            grafo_agregado, node_para_no_original = self._agregar_grafo(
+                grafo_atual, comunidades_nivel, node_para_no_original
+            )
+
+            if len(grafo_agregado) == n_nos_antes:
+                break
+
+            grafo_atual = grafo_agregado
+
+        if Q_anterior == float('-inf'):
+            return {no_id: i for i, no_id in enumerate(grafo_inicial)}
+
+        return ultima_correspondencia_valida
+
+    def _fase1_otimizacao_local(self, grafo):
+        """
+        Retorna:
+            dict { no_id: community_id }
+        """
+        comunidade = {no_id: no_id for no_id in grafo}
+
+        grau = {}
+        for no_id in grafo:
+            soma = sum(grafo[no_id].values())
+            if no_id in grafo[no_id]:
+                soma += grafo[no_id][no_id]
+            grau[no_id] = soma
+
+        m2 = sum(grau.values())
+        if m2 == 0:
+            return comunidade
+
+        soma_grau_comunidade = dict(grau)
+
+        nos = list(grafo.keys())
+        melhorou_global = True
+
+        while melhorou_global:
+            melhorou_global = False
+            random.shuffle(nos)
+
+            for no in nos:
+                comunidade_atual = comunidade[no]
+
+                soma_grau_comunidade[comunidade_atual] -= grau[no]
+
+                sigma_in_por_comunidade = {}
+                for vizinho, peso in grafo[no].items():
+                    if vizinho == no:
+                        continue  # self-loop não conta como vínculo externo
+                    c_vizinho = comunidade[vizinho]
+                    sigma_in_por_comunidade[c_vizinho] = (
+                            sigma_in_por_comunidade.get(c_vizinho, 0) + peso
+                    )
+
+                melhor_comunidade = comunidade_atual
+                melhor_ganho = sigma_in_por_comunidade.get(comunidade_atual, 0) - (
+                        soma_grau_comunidade[comunidade_atual] * grau[no]
+                ) / m2
+
+                for c_candidata, sigma_in in sigma_in_por_comunidade.items():
+                    if c_candidata == comunidade_atual:
+                        continue
+                    ganho = sigma_in - (
+                            soma_grau_comunidade.get(c_candidata, 0) * grau[no]
+                    ) / m2
+                    if ganho > melhor_ganho:
+                        melhor_ganho = ganho
+                        melhor_comunidade = c_candidata
+
+                soma_grau_comunidade[melhor_comunidade] = (
+                        soma_grau_comunidade.get(melhor_comunidade, 0) + grau[no]
+                )
+                comunidade[no] = melhor_comunidade
+
+                if melhor_comunidade != comunidade_atual:
+                    melhorou_global = True
+
+        return comunidade
+
+    def _agregar_grafo(self, grafo, comunidades, node_para_no_original):
+
+        ids_unicos = sorted(set(comunidades.values()))
+        remapeamento = {antigo: novo for novo, antigo in enumerate(ids_unicos)}
+
+        novo_grafo = {novo_id: {} for novo_id in remapeamento.values()}
+
+        for no_a in grafo:
+            comunidade_a = remapeamento[comunidades[no_a]]
+            for no_b, peso in grafo[no_a].items():
+                comunidade_b = remapeamento[comunidades[no_b]]
+
+                novo_grafo[comunidade_a][comunidade_b] = (
+                        novo_grafo[comunidade_a].get(comunidade_b, 0) + peso
+                )
+
+        novo_node_para_no_original = {novo_id: [] for novo_id in remapeamento.values()}
+        for no_antigo, comunidade_antiga in comunidades.items():
+            novo_id = remapeamento[comunidade_antiga]
+            novo_node_para_no_original[novo_id].extend(
+                node_para_no_original[no_antigo]
+            )
+
+        return novo_grafo, novo_node_para_no_original
+
+    def _calcular_modularidade(self, grafo, comunidades):
+        """
+        Q = (1 / 2m) * Σ_ij [A_ij - (k_i * k_j) / 2m] * δ(c_i, c_j)
+
+        """
+        grau = {}
+        for no_id in grafo:
+            soma = sum(grafo[no_id].values())
+            if no_id in grafo[no_id]:
+                soma += grafo[no_id][no_id]
+            grau[no_id] = soma
+
+        m2 = sum(grau.values())
+        if m2 == 0:
+            return 0.0
+
+        soma_interna = 0
+        for no_a in grafo:
+            for no_b, peso in grafo[no_a].items():
+                if comunidades[no_a] == comunidades[no_b]:
+                    soma_interna += peso
+
+        soma_grau_por_comunidade = {}
+        for no_id in grafo:
+            c = comunidades[no_id]
+            soma_grau_por_comunidade[c] = soma_grau_por_comunidade.get(c, 0) + grau[no_id]
+
+        soma_graus_quadrado = sum(s * s for s in soma_grau_por_comunidade.values())
+
+        Q = (soma_interna / m2) - (soma_graus_quadrado / (m2 * m2))
+        return Q
+
 def build_graphs_from_categories(processed_dir, categorias):
     import os
     builders = {}
@@ -213,3 +383,5 @@ def build_graphs_from_categories(processed_dir, categorias):
         builder.save_graph(f"data/graphs/{categoria}_graph.json")
 
     return builders
+
+
