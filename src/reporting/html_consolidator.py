@@ -166,10 +166,14 @@ def _coletar_secoes():
 
 _CSS = """
 :root {
-  --primary: #4F46E5;
-  --primary-hover: #4338CA;
-  --primary-light: #EEF2FF;
-  --accent: #EC4899;
+  --b2w-red: #E60014;
+  --b2w-blue: #00ADEF;
+  --b2w-orange: #FF6600;
+  
+  --primary: #0F172A;
+  --primary-hover: #1E293B;
+  --primary-light: #F1F5F9;
+  --accent: #E60014;
   --bg-app: #F8FAFC;
   --bg-card: #FFFFFF;
   --text-main: #1E293B;
@@ -178,10 +182,10 @@ _CSS = """
   --radius-lg: 16px;
   --radius-md: 12px;
   --radius-sm: 8px;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.02);
-  --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.02);
-  --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.08), 0 10px 10px -5px rgba(0,0,0,0.04);
-  --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+  --shadow-md: 0 8px 24px rgba(148, 163, 184, 0.08);
+  --shadow-lg: 0 16px 32px rgba(15, 23, 42, 0.05);
+  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 * {
@@ -209,7 +213,7 @@ nav.sumario {
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
   border-right: 1px solid var(--border);
-  padding: 32px 20px;
+  padding: 36px 20px;
   position: sticky;
   top: 0;
   height: 100vh;
@@ -217,9 +221,36 @@ nav.sumario {
   z-index: 10;
 }
 
+.logo-container {
+  margin-bottom: 36px;
+  padding: 0 12px;
+}
+
+.brand-b2w {
+  display: block;
+  font-family: 'Outfit', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: linear-gradient(135deg, var(--b2w-red) 0%, var(--b2w-blue) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brand-sub {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.18em;
+  margin-top: 2px;
+}
+
 nav.sumario h2 {
   font-family: 'Outfit', sans-serif;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -241,7 +272,7 @@ nav.sumario a {
 
 nav.sumario a:hover {
   background-color: var(--primary-light);
-  color: var(--primary);
+  color: var(--b2w-red);
   transform: translateX(4px);
 }
 
@@ -253,7 +284,7 @@ main {
 }
 
 header.capa {
-  background: linear-gradient(135deg, #4F46E5 0%, #312E81 100%);
+  background: linear-gradient(135deg, var(--b2w-red) 0%, var(--b2w-orange) 50%, var(--b2w-blue) 100%);
   color: white;
   border-radius: var(--radius-lg);
   padding: 56px 48px;
@@ -270,7 +301,7 @@ header.capa::after {
   right: -100px;
   width: 300px;
   height: 300px;
-  background: radial-gradient(circle, rgba(236, 72, 153, 0.2) 0%, rgba(236, 72, 153, 0) 75%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 75%);
   border-radius: 50%;
 }
 
@@ -284,7 +315,7 @@ header.capa h1 {
 }
 
 header.capa .meta {
-  opacity: 0.9;
+  opacity: 0.95;
   font-size: 14px;
   line-height: 1.7;
 }
@@ -309,7 +340,7 @@ section.bloco > h2.titulo-secao {
   font-family: 'Outfit', sans-serif;
   font-size: 24px;
   font-weight: 700;
-  color: #1E1B4B;
+  color: var(--primary);
   margin-top: 0;
   margin-bottom: 24px;
   border-bottom: 2px solid var(--primary-light);
@@ -324,12 +355,12 @@ section.bloco > h2.titulo-secao::after {
   left: 0;
   width: 60px;
   height: 2px;
-  background: var(--primary);
+  background: linear-gradient(90deg, var(--b2w-red), var(--b2w-blue));
 }
 
 h1, h2, h3, h4 {
   font-family: 'Outfit', sans-serif;
-  color: #1E1B4B;
+  color: var(--primary);
   font-weight: 700;
 }
 
@@ -390,17 +421,17 @@ img:hover {
 }
 
 blockquote {
-  border-left: 4px solid var(--primary);
-  background: var(--primary-light);
+  border-left: 4px solid var(--b2w-red);
+  background: #FFF5F5;
   padding: 16px 24px;
   margin: 24px 0;
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   font-size: 14.5px;
-  color: #312E81;
+  color: #8C1D1D;
 }
 
 blockquote strong {
-  color: var(--primary);
+  color: var(--b2w-red);
 }
 
 code {
@@ -523,6 +554,10 @@ def _montar_html(secoes) -> str:
 <body>
   <div class="layout">
     <nav class="sumario">
+      <div class="logo-container">
+        <span class="brand-b2w">b2w digital</span>
+        <span class="brand-sub">cx analytics</span>
+      </div>
       <h2>Sumário</h2>
 {itens_nav}
     </nav>
